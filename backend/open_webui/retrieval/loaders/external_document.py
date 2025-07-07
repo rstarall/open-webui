@@ -37,7 +37,9 @@ class ExternalDocumentLoader(BaseLoader):
             headers["Authorization"] = f"Bearer {self.api_key}"
 
         try:
-            headers["X-Filename"] = os.path.basename(self.file_path)
+            import urllib.parse
+            filename = os.path.basename(self.file_path)
+            headers["X-Filename"] = urllib.parse.quote(filename)
         except:
             pass
 
@@ -52,7 +54,6 @@ class ExternalDocumentLoader(BaseLoader):
             raise Exception(f"Error connecting to endpoint: {e}")
 
         if response.ok:
-
             response_data = response.json()
             if response_data:
                 if isinstance(response_data, dict):
@@ -74,7 +75,6 @@ class ExternalDocumentLoader(BaseLoader):
                     return documents
                 else:
                     raise Exception("Error loading document: Unable to parse content")
-
             else:
                 raise Exception("Error loading document: No content returned")
         else:
