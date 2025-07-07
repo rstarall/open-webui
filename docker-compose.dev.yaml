@@ -14,7 +14,10 @@ services:
       args:
         OLLAMA_BASE_URL: '/ollama'
         BUILD_HASH: 'dev-local'
-      dockerfile: Dockerfile
+        # 移除代理设置，改用国内镜像源
+        DEBIAN_MIRROR: "mirrors.tuna.tsinghua.edu.cn"
+        NPM_MIRROR: "https://registry.npmmirror.com"
+      dockerfile: Dockerfile.dev
     image: open-webui-dev:local
     container_name: open-webui-dev
     volumes:
@@ -30,8 +33,6 @@ services:
       - 'OLLAMA_BASE_URL=http://ollama:11434'
       - 'WEBUI_SECRET_KEY='
       - 'ENV=dev'
-    extra_hosts:
-      - host.docker.internal:host-gateway
     restart: unless-stopped
 
 volumes:
@@ -40,3 +41,5 @@ volumes:
 
 # 开发环境构建和启动
 # docker-compose -f docker-compose.dev.yaml up -d --build
+
+
