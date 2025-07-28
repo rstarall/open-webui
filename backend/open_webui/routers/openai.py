@@ -765,11 +765,22 @@ async def generate_chat_completion(
 
     # Add user info to the payload if the model is a pipeline
     if "pipeline" in model and model.get("pipeline"):
+        # 获取用户的 token
+        user_token = None
+        auth_header = request.headers.get("Authorization")
+        if auth_header:
+            try:
+                _, token = auth_header.split(" ", 1)
+                user_token = token
+            except ValueError:
+                pass
+        
         payload["user"] = {
             "name": user.name,
             "id": user.id,
             "email": user.email,
             "role": user.role,
+            "token": user_token,  # 添加 token
         }
 
     url = request.app.state.config.OPENAI_API_BASE_URLS[idx]

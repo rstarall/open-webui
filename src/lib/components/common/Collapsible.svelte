@@ -59,7 +59,8 @@
 
 	$: onChange(open);
 
-	const collapsibleId = uuidv4();
+	// 使用 component_id 作为唯一标识符（如果提供的话），否则使用 UUID
+	const collapsibleId = attributes?.component_id || uuidv4();
 
 	function parseJSONString(str) {
 		try {
@@ -125,6 +126,22 @@
 							{/if}
 						{:else}
 							{$i18n.t('Thinking...')}
+						{/if}
+					{:else if attributes?.type === 'processing'}
+						{#if attributes?.done === 'true' && attributes?.duration}
+							{#if attributes.duration < 60}
+								{$i18n.t('{{TITLE}} for {{DURATION}} seconds', {
+									TITLE: attributes?.title || $i18n.t('Processed'),
+									DURATION: attributes.duration
+								})}
+							{:else}
+								{$i18n.t('{{TITLE}} for {{DURATION}}', {
+									TITLE: attributes?.title || $i18n.t('Processed'),
+									DURATION: dayjs.duration(attributes.duration, 'seconds').humanize()
+								})}
+							{/if}
+						{:else}
+							{attributes?.title || $i18n.t('Processing...')}
 						{/if}
 					{:else if attributes?.type === 'code_interpreter'}
 						{#if attributes?.done === 'true'}

@@ -1447,6 +1447,27 @@ async def process_chat_response(
                             else:
                                 content = f'{content}\n<details type="reasoning" done="false">\n<summary>Thinking…</summary>\n{reasoning_display_content}\n</details>\n'
 
+                    elif block["type"] == "processing":
+                        processing_display_content = "\n".join(
+                            (f"> {line}" if not line.startswith(">") else line)
+                            for line in block["content"].splitlines()
+                        )
+
+                        processing_duration = block.get("duration", None)
+                        processing_title = block.get("title", "Processing")
+                        stage = block.get("stage", "processing")  # 获取stage作为组件ID
+
+                        if processing_duration is not None:
+                            if raw:
+                                content = f'{content}\n<{block.get("start_tag", "processing")}>{block["content"]}<{block.get("end_tag", "/processing")}>\n'
+                            else:
+                                content = f'{content}\n<details type="processing" done="true" duration="{processing_duration}" title="{html.escape(processing_title)}" component_id="{html.escape(stage)}">\n<summary>{processing_title} for {processing_duration} seconds</summary>\n{processing_display_content}\n</details>\n'
+                        else:
+                            if raw:
+                                content = f'{content}\n<{block.get("start_tag", "processing")}>{block["content"]}<{block.get("end_tag", "/processing")}>\n'
+                            else:
+                                content = f'{content}\n<details type="processing" done="false" title="{html.escape(processing_title)}" component_id="{html.escape(stage)}">\n<summary>{processing_title}…</summary>\n{processing_display_content}\n</details>\n'
+
                     elif block["type"] == "code_interpreter":
                         attributes = block.get("attributes", {})
                         output = block.get("output", None)
@@ -1906,6 +1927,63 @@ async def process_chat_response(
                                             )
                                         }
 
+                                    processing_content = (
+                                        delta.get("processing_content")
+                                        or delta.get("processing")
+                                    )
+                                    if processing_content:
+                                        # 获取当前的stage用于组件区分
+                                        current_stage = delta.get("processing_stage", "processing")
+                                        
+                                        if (
+                                            not content_blocks
+                                            or content_blocks[-1]["type"] != "processing"
+                                            or content_blocks[-1].get("stage") != current_stage
+                                        ):
+                                            # 🔥 新增：如果前一个块是不同stage的processing块，为它设置duration
+                                            if (
+                                                content_blocks
+                                                and content_blocks[-1]["type"] == "processing"
+                                                and content_blocks[-1].get("stage") != current_stage
+                                                and "duration" not in content_blocks[-1]
+                                                and content_blocks[-1].get("attributes", {}).get("type") == "processing_content"
+                                            ):
+                                                prev_processing_block = content_blocks[-1]
+                                                prev_processing_block["ended_at"] = time.time()
+                                                prev_processing_block["duration"] = int(
+                                                    prev_processing_block["ended_at"]
+                                                    - prev_processing_block["started_at"]
+                                                )
+                                            
+                                            # 创建新的processing块 - 保留所有必要属性
+                                            processing_block = {
+                                                "type": "processing",
+                                                "start_tag": "processing",
+                                                "end_tag": "/processing",
+                                                "attributes": {
+                                                    "type": "processing_content"  
+                                                },
+                                                "title": delta.get("processing_title", "Processing"), 
+                                                "stage": current_stage, 
+                                                "content": "", 
+                                                "started_at": time.time(),  
+                                            }
+                                            content_blocks.append(processing_block)
+                                        else:
+                                            processing_block = content_blocks[-1]
+
+                                        processing_block["content"] += processing_content
+
+                                        # Update title if provided
+                                        if delta.get("processing_title"):
+                                            processing_block["title"] = delta.get("processing_title")
+
+                                        data = {
+                                            "content": serialize_content_blocks(
+                                                content_blocks
+                                            )
+                                        }
+
                                     if value:
                                         if (
                                             content_blocks
@@ -1921,6 +1999,28 @@ async def process_chat_response(
                                             reasoning_block["duration"] = int(
                                                 reasoning_block["ended_at"]
                                                 - reasoning_block["started_at"]
+                                            )
+
+                                            content_blocks.append(
+                                                {
+                                                    "type": "text",
+                                                    "content": "",
+                                                }
+                                            )
+                                        elif (
+                                            content_blocks
+                                            and content_blocks[-1]["type"]
+                                            == "processing"
+                                            and content_blocks[-1]
+                                            .get("attributes", {})
+                                            .get("type")
+                                            == "processing_content"
+                                        ):
+                                            processing_block = content_blocks[-1]
+                                            processing_block["ended_at"] = time.time()
+                                            processing_block["duration"] = int(
+                                                processing_block["ended_at"]
+                                                - processing_block["started_at"]
                                             )
 
                                             content_blocks.append(

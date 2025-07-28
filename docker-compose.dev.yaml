@@ -7,6 +7,8 @@ services:
     tty: true
     restart: unless-stopped
     image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
+    ports:
+      - ${OLLAMA_PORT-11434}:11434
 
   open-webui:
     build:
@@ -14,9 +16,14 @@ services:
       args:
         OLLAMA_BASE_URL: '/ollama'
         BUILD_HASH: 'dev-local'
+        USE_EMBEDDING_MODEL: 'sentence-transformers/all-MiniLM-L6-v2'
+        USE_TIKTOKEN_ENCODING_NAME: 'cl100k_base'
         # 移除代理设置，改用国内镜像源
         DEBIAN_MIRROR: "mirrors.tuna.tsinghua.edu.cn"
         NPM_MIRROR: "https://registry.npmmirror.com"
+        # 使用官方镜像源
+        # # DEBIAN_MIRROR: "deb.debian.org"
+        # NPM_MIRROR: "https://registry.npmjs.org"
       dockerfile: Dockerfile.dev
     image: open-webui-dev:local
     container_name: open-webui-dev
@@ -33,6 +40,7 @@ services:
       - 'OLLAMA_BASE_URL=http://ollama:11434'
       - 'WEBUI_SECRET_KEY='
       - 'ENV=dev'
+      - 'ENABLE_RAG_HYBRID_SEARCH=false'
     restart: unless-stopped
 
 volumes:
@@ -41,5 +49,7 @@ volumes:
 
 # 开发环境构建和启动
 # docker-compose -f docker-compose.dev.yaml up -d --build
+
+
 
 
