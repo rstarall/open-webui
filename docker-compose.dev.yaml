@@ -18,12 +18,9 @@ services:
         BUILD_HASH: 'dev-local'
         USE_EMBEDDING_MODEL: 'sentence-transformers/all-MiniLM-L6-v2'
         USE_TIKTOKEN_ENCODING_NAME: 'cl100k_base'
-        # 移除代理设置，改用国内镜像源
+        # 使用国内镜像源
         DEBIAN_MIRROR: "mirrors.tuna.tsinghua.edu.cn"
         NPM_MIRROR: "https://registry.npmmirror.com"
-        # 使用官方镜像源
-        # # DEBIAN_MIRROR: "deb.debian.org"
-        # NPM_MIRROR: "https://registry.npmjs.org"
       dockerfile: Dockerfile.dev
     image: open-webui-dev:local
     container_name: open-webui-dev
