@@ -78,6 +78,7 @@
 
 	let params = {
 		system: ''
+		// helloMessage: ''  // Hello Message 功能注释掉
 	};
 	let capabilities = {
 		vision: true,
@@ -575,6 +576,23 @@
 									/>
 								</div>
 							</div>
+
+							{/* Hello Message 功能注释掉
+							<div class="my-3">
+								<div class=" text-xs font-semibold mb-2">{$i18n.t('Hello Message')}</div>
+								<div>
+									<Textarea
+										className=" text-sm w-full bg-transparent outline-hidden resize-none overflow-y-hidden "
+										placeholder={`Write a hello message for new chats. Leave empty for none.\ne.g.) Hello! I'm here to help you. How can I assist you today?`}
+										rows={3}
+										bind:value={params.helloMessage}
+									/>
+								</div>
+								<div class="mt-1 text-xs text-gray-500">
+									{$i18n.t('This message will appear as the first assistant message when users start a new chat with this model.')}
+								</div>
+							</div>
+							*/}
 
 							<div class="flex w-full justify-between">
 								<div class=" self-center text-xs font-semibold">

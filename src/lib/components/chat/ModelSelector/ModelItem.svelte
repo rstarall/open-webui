@@ -24,6 +24,7 @@
 
 	export let unloadModelHandler: (modelValue: string) => void = () => {};
 	export let pinModelHandler: (modelId: string) => void = () => {};
+	export let globalPinModelHandler: (modelId: string) => void = () => {};
 
 	export let onClick: () => void = () => {};
 
@@ -228,6 +229,7 @@
 			bind:show={showMenu}
 			model={item.model}
 			{pinModelHandler}
+			{globalPinModelHandler}
 			copyLinkHandler={() => {
 				copyLinkHandler(item.model);
 			}}

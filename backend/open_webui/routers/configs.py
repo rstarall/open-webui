@@ -327,3 +327,43 @@ async def get_banners(
     user=Depends(get_verified_user),
 ):
     return request.app.state.config.BANNERS
+
+
+############################
+# Global Pinned Models
+############################
+
+
+class GlobalPinnedModelsForm(BaseModel):
+    models: list[str]
+
+
+@router.post("/global/pinned-models", response_model=list[str])
+async def set_global_pinned_models(
+    request: Request,
+    form_data: GlobalPinnedModelsForm,
+    user=Depends(get_admin_user),
+):
+    """设置全局固定的模型（仅管理员）"""
+    # 获取当前配置
+    config = get_config()
+    
+    # 更新全局固定模型
+    if "ui" not in config:
+        config["ui"] = {}
+    config["ui"]["globalPinnedModels"] = form_data.models
+    
+    # 保存配置
+    save_config(config)
+    
+    return form_data.models
+
+
+@router.get("/global/pinned-models", response_model=list[str])
+async def get_global_pinned_models(
+    request: Request,
+    user=Depends(get_verified_user),
+):
+    """获取全局固定的模型"""
+    config = get_config()
+    return config.get("ui", {}).get("globalPinnedModels", [])

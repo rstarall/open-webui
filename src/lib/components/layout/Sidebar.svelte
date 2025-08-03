@@ -39,6 +39,7 @@
 		importChat
 	} from '$lib/apis/chats';
 	import { createNewFolder, getFolders, updateFolderParentIdById } from '$lib/apis/folders';
+	import { getGlobalPinnedModels } from '$lib/apis/configs';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import ArchivedChatsModal from './ArchivedChatsModal.svelte';
@@ -57,6 +58,7 @@
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Home from '../icons/Home.svelte';
 	import Search from '../icons/Search.svelte';
+	import GlobeAlt from '../icons/GlobeAlt.svelte';
 	import SearchModal from './SearchModal.svelte';
 	import FolderModal from './Sidebar/Folders/FolderModal.svelte';
 
@@ -78,6 +80,7 @@
 	let showCreateFolderModal = false;
 	let folders = {};
 	let newFolderId = null;
+	let globalPinnedModels = [];
 
 	const initFolders = async () => {
 		const folderList = await getFolders(localStorage.token).catch((error) => {
@@ -370,9 +373,24 @@
 		chats.subscribe((value) => {
 			initFolders();
 		});
+		
+		// 监听 config 变化以更新全局固定模型
+		config.subscribe((value) => {
+			if (value?.ui?.globalPinnedModels) {
+				globalPinnedModels = value.ui.globalPinnedModels;
+			}
+		});
 
 		await initChannels();
 		await initChatList();
+		
+		// 加载全局固定的模型
+		try {
+			globalPinnedModels = await getGlobalPinnedModels(localStorage.token);
+		} catch (error) {
+			console.error('Failed to load global pinned models:', error);
+			globalPinnedModels = [];
+		}
 
 		window.addEventListener('keydown', onKeyDown);
 		window.addEventListener('keyup', onKeyUp);
@@ -673,10 +691,14 @@
 		{/if}
 
 		<div class="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-			{#if ($models ?? []).length > 0 && ($settings?.pinnedModels ?? []).length > 0}
+			{#if ($models ?? []).length > 0}
+				{@const allPinnedModels = [...new Set([...globalPinnedModels, ...($settings?.pinnedModels ?? [])])]}
+				{#if allPinnedModels.length > 0}
 				<div class="mt-0.5">
-					{#each $settings.pinnedModels as modelId (modelId)}
+					{#each allPinnedModels as modelId (modelId)}
 						{@const model = $models.find((model) => model.id === modelId)}
+						{@const isGlobalPinned = globalPinnedModels.includes(modelId)}
+						{@const isPersonalPinned = ($settings?.pinnedModels ?? []).includes(modelId)}
 						{#if model}
 							<div class="px-1.5 flex justify-center text-gray-800 dark:text-gray-200">
 								<a
@@ -707,11 +729,20 @@
 											{model?.name ?? modelId}
 										</div>
 									</div>
+									
+									{#if isGlobalPinned}
+										<div class="ml-auto self-center">
+											<Tooltip content={$i18n.t('Pinned by Admin')}>
+												<GlobeAlt className="size-3 text-gray-500 dark:text-gray-400" />
+											</Tooltip>
+										</div>
+									{/if}
 								</a>
 							</div>
 						{/if}
 					{/each}
 				</div>
+				{/if}
 			{/if}
 
 			{#if $config?.features?.enable_channels && ($user?.role === 'admin' || $channels.length > 0)}

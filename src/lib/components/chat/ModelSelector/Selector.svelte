@@ -59,6 +59,7 @@
 	export let triggerClassName = 'text-lg';
 
 	export let pinModelHandler: (modelId: string) => void = () => {};
+	export let globalPinModelHandler: (modelId: string) => void = () => {};
 
 	let tagsContainerElement;
 
@@ -513,6 +514,7 @@
 						{index}
 						{value}
 						{pinModelHandler}
+						{globalPinModelHandler}
 						{unloadModelHandler}
 						onClick={() => {
 							value = item.value;

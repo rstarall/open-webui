@@ -883,6 +883,33 @@
 			settings.set(JSON.parse(localStorage.getItem('settings') ?? '{}'));
 		}
 
+		/* Hello Message 功能注释掉
+		// 添加 Hello Message（从模型配置中读取）
+		console.log('initNewChat - selectedModels:', selectedModels);
+		if (selectedModels.length > 0 && selectedModels[0]) {
+			const selectedModel = $models.find(m => m.id === selectedModels[0]);
+			console.log('initNewChat - selectedModel:', selectedModel);
+			console.log('initNewChat - selectedModel.params:', selectedModel?.params);
+			console.log('initNewChat - helloMessage:', selectedModel?.params?.helloMessage);
+			
+			if (selectedModel?.params?.helloMessage && selectedModel.params.helloMessage.trim() !== '') {
+				// 创建一个助手消息
+				const assistantMessageId = uuidv4();
+				history.messages[assistantMessageId] = {
+					id: assistantMessageId,
+					parentId: null,
+					role: 'assistant',
+					content: selectedModel.params.helloMessage,
+					model: selectedModels[0],
+					timestamp: Date.now() / 1000,
+					done: true
+				};
+				history.currentId = assistantMessageId;
+				console.log('initNewChat - Hello message added:', selectedModel.params.helloMessage);
+			}
+		}
+		*/
+
 		const chatInput = document.getElementById('chat-input');
 		setTimeout(() => chatInput?.focus(), 0);
 	};

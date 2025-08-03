@@ -8,7 +8,8 @@
 	import Link from '$lib/components/icons/Link.svelte';
 	import Eye from '$lib/components/icons/Eye.svelte';
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
-	import { settings } from '$lib/stores';
+	import GlobeAlt from '$lib/components/icons/GlobeAlt.svelte';
+	import { settings, user, config } from '$lib/stores';
 
 	const i18n = getContext('i18n');
 
@@ -16,6 +17,7 @@
 	export let model;
 
 	export let pinModelHandler: (modelId: string) => void = () => {};
+	export let globalPinModelHandler: (modelId: string) => void = () => {};
 	export let copyLinkHandler: Function = () => {};
 
 	export let onClose: Function = () => {};
@@ -70,6 +72,36 @@
 				{/if}
 			</div>
 		</button>
+
+		{#if $user?.role === 'admin'}
+			<button
+				type="button"
+				class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
+				on:click={(e) => {
+					e.stopPropagation();
+					e.preventDefault();
+
+					globalPinModelHandler(model?.id);
+					show = false;
+				}}
+			>
+				{#if ($config?.ui?.globalPinnedModels ?? []).includes(model?.id)}
+					<EyeSlash />
+					<GlobeAlt className="size-3" />
+				{:else}
+					<Eye />
+					<GlobeAlt className="size-3" />
+				{/if}
+
+				<div class="flex items-center">
+					{#if ($config?.ui?.globalPinnedModels ?? []).includes(model?.id)}
+						{$i18n.t('Hide from All Users')}
+					{:else}
+						{$i18n.t('Pin for All Users')}
+					{/if}
+				</div>
+			</button>
+		{/if}
 
 		<button
 			type="button"

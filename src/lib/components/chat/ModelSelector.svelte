@@ -6,6 +6,7 @@
 	import Tooltip from '../common/Tooltip.svelte';
 
 	import { updateUserSettings } from '$lib/apis/users';
+	import { setGlobalPinnedModels, getGlobalPinnedModels } from '$lib/apis/configs';
 	const i18n = getContext('i18n');
 
 	export let selectedModels = [''];
@@ -38,6 +39,30 @@
 		await updateUserSettings(localStorage.token, { ui: $settings });
 	};
 
+	const globalPinModelHandler = async (modelId) => {
+		try {
+			// 获取当前全局固定的模型
+			let globalPinnedModels = await getGlobalPinnedModels(localStorage.token);
+			
+			if (globalPinnedModels.includes(modelId)) {
+				globalPinnedModels = globalPinnedModels.filter((id) => id !== modelId);
+			} else {
+				globalPinnedModels = [...new Set([...globalPinnedModels, modelId])];
+			}
+			
+			// 更新全局固定模型
+			await setGlobalPinnedModels(localStorage.token, globalPinnedModels);
+			
+			// 更新本地 config store 以触发 UI 更新
+			config.set({ ...$config, ui: { ...$config.ui, globalPinnedModels } });
+			
+			toast.success($i18n.t('Global pinned models updated'));
+		} catch (error) {
+			toast.error($i18n.t('Failed to update global pinned models'));
+			console.error('Global pin model error:', error);
+		}
+	};
+
 	$: if (selectedModels.length > 0 && $models.length > 0) {
 		selectedModels = selectedModels.map((model) =>
 			$models.map((m) => m.id).includes(model) ? model : ''
@@ -63,6 +88,7 @@
 								!($user?.permissions?.chat?.temporary_enforced ?? false)
 							: true}
 						{pinModelHandler}
+						{globalPinModelHandler}
 						bind:value={selectedModel}
 					/>
 				</div>
