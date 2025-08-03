@@ -25,6 +25,8 @@ e.Wait for the backend server to start successfully.
 npm run dev
 
 conda activate open-webui
+
+cd backend
 sh dev.sh
 
 docker-command.md
