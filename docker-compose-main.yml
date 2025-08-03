@@ -1,0 +1,189 @@
+version: '3.8'
+
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    container_name: milvus-etcd
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - ubuntu_etcd_data:/etcd
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    networks:
+      - ollama-net
+    restart: always
+
+  minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    container_name: milvus-minio
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ubuntu_minio_data:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+    networks:
+      - ollama-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: always
+
+  milvus:
+    image: milvusdb/milvus:v2.3.3
+    container_name: milvus-standalone
+    command: ["milvus", "run", "standalone"]
+    environment:
+      QUERY_NODE_MAXQUERYRESULTWINDOW: 524288
+      COMMON_MAXQUERYRESULTWINDOW: 524288
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+      CUDA_VISIBLE_DEVICES: 0
+    volumes:
+      - ubuntu_milvus_data:/var/lib/milvus
+      # - ./milvus.yaml:/milvus/configs/milvus.yaml  # 确保这行存在
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    networks:
+      - ollama-net
+    depends_on:
+      - etcd
+      - minio
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    # restart: always
+
+  open-webui:
+    build:
+      context: .
+      args:
+        OLLAMA_BASE_URL: '/ollama'
+        BUILD_HASH: 'dev-local'
+        USE_EMBEDDING_MODEL: 'sentence-transformers/all-MiniLM-L6-v2'
+        USE_TIKTOKEN_ENCODING_NAME: 'cl100k_base'
+        # 使用国内镜像源（如果需要可以取消注释）
+        # DEBIAN_MIRROR: "mirrors.tuna.tsinghua.edu.cn"
+        # NPM_MIRROR: "https://registry.npmmirror.com"
+      dockerfile: Dockerfile
+    image: open-webui:dev-build
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    environment:
+      # Ollama 连接配置
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=
+      
+      # Milvus 配置
+      - VECTOR_DB=milvus
+      - MILVUS_URI=http://milvus-standalone:19530
+      - MILVUS_TOKEN=
+      - MILVUS_DB=default
+      - ENABLE_RAG=true
+      - RAG_EMBEDDING_ENGINE=ollama
+      - ENABLE_RAG_HYBRID_SEARCH=false
+      
+      # 索引配置
+      - MILVUS_INDEX_TYPE=FLAT
+      - MILVUS_INDEX_PARAMS={}
+      
+      # # 如果你需要使用代理但排除特定域名，取消下面的注释
+      # - http_proxy=http://172.17.0.1:7890
+      # - https_proxy=http://172.17.0.1:7890
+      
+      # # 不走代理的域名列表（添加 openrouter.ai 和 datalab.to）
+      # - no_proxy=localhost,127.0.0.1,ollama,milvus-standalone,jupyter-openwebui,172.17.0.0/16,172.18.0.0/16,openrouter.ai,*.openrouter.ai,datalab.to,*.datalab.to,poloai.top,*.poloai.top
+      # - NO_PROXY=localhost,127.0.0.1,ollama,milvus-standalone,jupyter-openwebui,172.17.0.0/16,172.18.0.0/16,openrouter.ai,*.openrouter.ai,datalab.to,*.datalab.to,poloai.top,*.poloai.top     
+    volumes:
+      - open-webui:/app/backend/data
+      # 挂载本地源码目录到容器中，修改代码后会自动同步
+      - ./backend:/app/backend
+      - ./src:/app/src
+      # 保留您的自定义milvus.py文件
+      # - /home/ubuntu/milvus.py:/app/backend/open_webui/retrieval/vector/dbs/milvus.py:ro
+    networks:
+      - ollama-net
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    depends_on:
+      - milvus
+    restart: unless-stopped
+
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: jupyter-openwebui
+    ports:
+      - "8888:8888"
+    environment:
+      # Jupyter 配置
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=openwebui123
+      - GRANT_SUDO=yes
+      
+      # 代理配置（与你的 OpenWebUI 保持一致）
+      # - http_proxy=http://172.17.0.1:7890
+      # - https_proxy=http://172.17.0.1:7890
+      # - no_proxy=localhost,127.0.0.1,172.17.0.0/16
+      # - NO_PROXY=localhost,127.0.0.1,172.17.0.0/16
+      
+    volumes:
+      # 工作目录
+      - ./notebooks:/home/jovyan/work
+      # 持久化已安装的包
+      - ubuntu_jupyter-packages:/opt/conda/lib/python3.11/site-packages
+      # Jupyter 配置
+      - ubuntu_jupyter-config:/home/jovyan/.jupyter
+      
+    networks:
+      - ollama-net
+      
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      
+    restart: unless-stopped
+    
+    # 启动后自动安装包
+    command: >
+      bash -c "
+        pip install python-docx pandas numpy matplotlib seaborn plotly beautifulsoup4 openpyxl requests pillow scikit-learn &&
+        start-notebook.sh \
+          --NotebookApp.token='openwebui123' \
+          --NotebookApp.allow_origin='*' \
+          --NotebookApp.disable_check_xsrf=True \
+          --NotebookApp.allow_credentials=True
+      "
+
+volumes:
+  # 使用原有的卷
+  open-webui:
+    external: true
+  ubuntu_etcd_data:
+    external: true
+  ubuntu_minio_data:
+    external: true
+  ubuntu_milvus_data:
+    external: true
+  ubuntu_jupyter-packages:
+    external: true
+  ubuntu_jupyter-config:
+    external: true
+
+networks:
+  ollama-net:
+    external: true

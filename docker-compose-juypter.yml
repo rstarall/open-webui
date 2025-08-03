@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: jupyter-openwebui
+    ports:
+      - "8888:8888"
+    environment:
+      # Jupyter 配置
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=openwebui123
+      - GRANT_SUDO=yes
+      
+      # 代理配置（与你的 OpenWebUI 保持一致）
+      # - http_proxy=http://172.17.0.1:7890
+      # - https_proxy=http://172.17.0.1:7890
+      # - no_proxy=localhost,127.0.0.1,172.17.0.0/16
+      # - NO_PROXY=localhost,127.0.0.1,172.17.0.0/16
+      
+    volumes:
+      # 工作目录
+      - ./notebooks:/home/jovyan/work
+      # 持久化已安装的包
+      - jupyter-packages:/opt/conda/lib/python3.11/site-packages
+      # Jupyter 配置
+      - jupyter-config:/home/jovyan/.jupyter
+      
+    networks:
+      - ollama-net
+      
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      
+    restart: unless-stopped
+    
+    # 启动后自动安装包
+    command: >
+      bash -c "
+        pip install python-docx pandas numpy matplotlib seaborn plotly beautifulsoup4 openpyxl requests pillow scikit-learn &&
+        start-notebook.sh \
+          --NotebookApp.token='openwebui123' \
+          --NotebookApp.allow_origin='*' \
+          --NotebookApp.disable_check_xsrf=True \
+          --NotebookApp.allow_credentials=True
+      "
+
+volumes:
+  jupyter-packages:
+  jupyter-config:
+
+networks:
+  ollama-net:
+    external: true

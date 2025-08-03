@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  open-webui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: open-webui-dev
+    ports:
+      - "3001:8080"
+    environment:
+      # 保持原有的环境变量
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - VECTOR_DB=milvus
+      - MILVUS_URI=http://milvus-standalone:19530
+      - ENABLE_RAG=true
+      - RAG_EMBEDDING_ENGINE=ollama
+    volumes:
+      - open-webui:/app/backend/data
+      # 挂载源码目录
+      - ./backend:/app/backend
+      - ./src:/app/src
+      # 保留你的自定义文件
+      - ./custom/milvus.py:/app/backend/open_webui/retrieval/vector/dbs/milvus.py
+    networks:
+      - ollama-net1
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    restart: unless-stopped
+
+volumes:
+  open-webui:
+    external: true
+
+networks:
+  ollama-net1:
+    external: true
