@@ -207,6 +207,66 @@
 				</div>
 			{/if}
 
+			<!-- Model Usage Instructions -->
+			{#if (atSelectedModel?.info?.meta?.usage_instructions ?? models[selectedModelIdx]?.info?.meta?.usage_instructions ?? null) !== null}
+				{@const instructions = atSelectedModel?.info?.meta?.usage_instructions ?? models[selectedModelIdx]?.info?.meta?.usage_instructions}
+				<div class="mt-3 mb-4 max-w-4xl">
+					{#if instructions.title}
+						<div class="text-lg font-medium mb-3 text-center">{instructions.title}</div>
+					{/if}
+					
+					<div class="flex flex-col md:flex-row gap-4">
+						{#if instructions.content}
+							<div class="flex-1 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+								<p class="font-medium mb-2 text-sm text-gray-600 dark:text-gray-400">使用方法</p>
+								<div class="text-sm space-y-2 whitespace-pre-line text-gray-700 dark:text-gray-300">
+									{instructions.content}
+								</div>
+							</div>
+						{/if}
+						
+						{#if instructions.image_url}
+							<div class="flex-1 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+								<p class="font-medium mb-2 text-sm text-gray-600 dark:text-gray-400">使用图片点击放大</p>
+								<div class="flex justify-center">
+									<button
+										type="button"
+										class="cursor-pointer hover:opacity-90 transition-opacity"
+										on:click={() => {
+											modalImageUrl = instructions.image_url;
+											showImageModal = true;
+										}}
+									>
+										<img 
+											src={instructions.image_url}
+											alt="Model Usage Demo" 
+											class="rounded-lg"
+											style="max-height: 150px; width: auto;"
+										/>
+									</button>
+								</div>
+							</div>
+						{/if}
+						
+						{#if instructions.video_url}
+							<div class="flex-1 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+								<p class="font-medium mb-2 text-sm text-gray-600 dark:text-gray-400">使用视频点击放大播放</p>
+								<div class="flex justify-center">
+									<video 
+										controls 
+										class="rounded-lg"
+										style="max-height: 200px; width: auto;"
+									>
+										<source src={instructions.video_url} type="video/mp4">
+										Your browser does not support the video tag.
+									</video>
+								</div>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
 			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}">
 				<MessageInput
 					bind:this={messageInput}
@@ -257,61 +317,6 @@
 	{:else}
 		<div class="mx-auto max-w-2xl font-primary mt-2" in:fade={{ duration: 200, delay: 200 }}>
 			<div class="mx-5">
-				<!-- Model Usage Instructions -->
-				{#if (atSelectedModel?.info?.meta?.usage_instructions ?? models[selectedModelIdx]?.info?.meta?.usage_instructions ?? null) !== null}
-					{@const instructions = atSelectedModel?.info?.meta?.usage_instructions ?? models[selectedModelIdx]?.info?.meta?.usage_instructions}
-					<div class="mb-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300">
-						{#if instructions.title}
-							<div class="text-lg font-medium mb-2">{instructions.title}</div>
-						{/if}
-						
-						{#if instructions.content}
-							<div class="text-sm space-y-2 whitespace-pre-line">
-								{instructions.content}
-							</div>
-						{/if}
-						
-						{#if instructions.image_url}
-							<div class="mt-3">
-								<p class="font-medium mb-2 text-center text-sm">{$i18n.t('Usage Demo Image')}</p>
-								<div class="flex justify-center">
-									<button
-										type="button"
-										class="cursor-pointer hover:opacity-90 transition-opacity"
-										on:click={() => {
-											modalImageUrl = instructions.image_url;
-											showImageModal = true;
-										}}
-									>
-										<img 
-											src={instructions.image_url}
-											alt="Model Usage Demo" 
-											class="rounded-lg"
-											style="max-height: 300px; width: auto;"
-										/>
-									</button>
-								</div>
-							</div>
-						{/if}
-						
-						{#if instructions.video_url}
-							<div class="mt-3">
-								<p class="font-medium mb-2 text-center text-sm">{$i18n.t('Usage Demo Video')}</p>
-								<div class="flex justify-center">
-									<video 
-										controls 
-										class="rounded-lg"
-										style="max-height: 200px; width: auto;"
-									>
-										<source src={instructions.video_url} type="video/mp4">
-										Your browser does not support the video tag.
-									</video>
-								</div>
-							</div>
-						{/if}
-					</div>
-				{/if}
-				
 				<Suggestions
 					suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
 						models[selectedModelIdx]?.info?.meta?.suggestion_prompts ??
