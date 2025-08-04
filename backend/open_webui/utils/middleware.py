@@ -1469,17 +1469,19 @@ async def process_chat_response(
                         )
 
                         reasoning_duration = block.get("duration", None)
+                        reasoning_title = block.get("title", "Thinking")
+                        stage = block.get("stage", "reasoning")  # 获取stage作为组件ID
 
                         if reasoning_duration is not None:
                             if raw:
                                 content = f'{content}\n{block["start_tag"]}{block["content"]}{block["end_tag"]}\n'
                             else:
-                                content = f'{content}\n<details type="reasoning" done="true" duration="{reasoning_duration}">\n<summary>Thought for {reasoning_duration} seconds</summary>\n{reasoning_display_content}\n</details>\n'
+                                content = f'{content}\n<details type="reasoning" done="true" duration="{reasoning_duration}" title="{html.escape(reasoning_title)}" component_id="{html.escape(stage)}">\n<summary>Thought for {reasoning_duration} seconds</summary>\n{reasoning_display_content}\n</details>\n'
                         else:
                             if raw:
                                 content = f'{content}\n{block["start_tag"]}{block["content"]}{block["end_tag"]}\n'
                             else:
-                                content = f'{content}\n<details type="reasoning" done="false">\n<summary>Thinking…</summary>\n{reasoning_display_content}\n</details>\n'
+                                content = f'{content}\n<details type="reasoning" done="false" title="{html.escape(reasoning_title)}" component_id="{html.escape(stage)}">\n<summary>{reasoning_title}…</summary>\n{reasoning_display_content}\n</details>\n'
 
                     elif block["type"] == "processing":
                         processing_display_content = "\n".join(
