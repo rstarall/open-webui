@@ -308,3 +308,7 @@ cypress/videos
 cypress/screenshots
 .vscode/settings.json
 claude_code.md
+yes
+yes.pub
+settings.local.json
+

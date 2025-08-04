@@ -16,7 +16,7 @@
 	export let show = false;
 	export let edit = false;
 
-	let enableFullContent = false;
+	let enableFullContent = true;
 
 	let isPdf = false;
 	let isAudio = false;
@@ -35,8 +35,15 @@
 
 	onMount(() => {
 		console.log(item);
-		if (item?.context === 'full') {
+		// 默认使用 full 模式，除非明确设置为其他值
+		if (item?.context === undefined || item?.context === 'full') {
 			enableFullContent = true;
+			// 确保 item.context 也设置为 'full'
+			if (item) {
+				item.context = 'full';
+			}
+		} else {
+			enableFullContent = false;
 		}
 	});
 </script>
