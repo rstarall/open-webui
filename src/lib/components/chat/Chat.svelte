@@ -859,6 +859,7 @@
 			showControls.set(true);
 		}
 
+
 		if ($page.url.searchParams.get('q')) {
 			const q = $page.url.searchParams.get('q') ?? '';
 			messageInput?.setText(q);

@@ -1,0 +1,1016 @@
+<script lang="ts">
+	import { toast } from 'svelte-sonner';
+	import { marked } from 'marked';
+
+	import { onMount, getContext, tick, createEventDispatcher } from 'svelte';
+	import { blur, fade } from 'svelte/transition';
+
+	const dispatch = createEventDispatcher();
+
+	import {
+		config,
+		user,
+		models as _models,
+		temporaryChatEnabled,
+		selectedFolder,
+		chats,
+		currentChatPage
+	} from '$lib/stores';
+	import { sanitizeResponseContent, extractCurlyBraceWords } from '$lib/utils';
+	import { WEBUI_BASE_URL } from '$lib/constants';
+
+	import Suggestions from './Suggestions.svelte';
+	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
+	import MessageInput from './MessageInput.svelte';
+	import FolderPlaceholder from './Placeholder/FolderPlaceholder.svelte';
+	import FolderTitle from './Placeholder/FolderTitle.svelte';
+	import { getChatList } from '$lib/apis/chats';
+	import { scale } from 'svelte/transition';
+
+	const i18n = getContext('i18n');
+
+	export let transparentBackground = false;
+
+	export let createMessagePair: Function;
+	export let stopResponse: Function;
+
+	export let autoScroll = false;
+
+	export let atSelectedModel: Model | undefined;
+	export let selectedModels: [''];
+
+	export let history;
+
+	export let prompt = '';
+	export let files = [];
+	export let messageInput = null;
+
+	export let selectedToolIds = [];
+	export let selectedFilterIds = [];
+
+	export let showCommands = false;
+
+	export let imageGenerationEnabled = false;
+	export let codeInterpreterEnabled = false;
+	export let webSearchEnabled = false;
+
+	export let onSelect = (e) => {};
+
+	export let toolServers = [];
+
+	let models = [];
+
+	let selectedModelIdx = 0;
+	let showImageModal = false;
+	let modalImageUrl = '';
+	let showVideoModal = false;
+	let modalVideoUrl = '';
+
+	$: if (selectedModels.length > 0) {
+		selectedModelIdx = models.length - 1;
+	}
+
+	$: models = selectedModels.map((id) => $_models.find((m) => m.id === id));
+
+	onMount(() => {});
+</script>
+
+<div class="m-auto w-full max-w-6xl px-2 @2xl:px-20 translate-y-6 py-24 text-center">
+	{#if $temporaryChatEnabled}
+		<Tooltip
+			content={$i18n.t("This chat won't appear in history and your messages will not be saved.")}
+			className="w-full flex justify-center mb-0.5"
+			placement="top"
+		>
+			<div class="flex items-center gap-2 text-gray-500 font-medium text-lg my-2 w-fit">
+				<EyeSlash strokeWidth="2.5" className="size-5" />{$i18n.t('Temporary Chat')}
+			</div>
+		</Tooltip>
+	{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+
+	<div
+		class="w-full text-3xl text-gray-800 dark:text-gray-100 text-center flex items-center gap-4 font-primary"
+	>
+		<div class="w-full flex flex-col justify-center items-center">
+			{#if $selectedFolder}
+				<FolderTitle
+					folder={$selectedFolder}
+					onUpdate={async (folder) => {
+						selectedFolder.set(folder);
+
+						await chats.set(await getChatList(localStorage.token, $currentChatPage));
+						currentChatPage.set(1);
+					}}
+					onDelete={async () => {
+						await chats.set(await getChatList(localStorage.token, $currentChatPage));
+						currentChatPage.set(1);
+
+						selectedFolder.set(null);
+					}}
+				/>
+			{:else}
+				<div class="flex flex-row justify-center gap-3 @sm:gap-3.5 w-fit px-5 max-w-xl">
+					<div class="flex shrink-0 justify-center">
+						<div class="flex -space-x-4 mb-0.5" in:fade={{ duration: 100 }}>
+							{#each models as model, modelIdx}
+								<Tooltip
+									content={(models[modelIdx]?.info?.meta?.tags ?? [])
+										.map((tag) => tag.name.toUpperCase())
+										.join(', ')}
+									placement="top"
+								>
+									<button
+										aria-hidden={models.length <= 1}
+										aria-label={$i18n.t('Get information on {{name}} in the UI', {
+											name: models[modelIdx]?.name
+										})}
+										on:click={() => {
+											selectedModelIdx = modelIdx;
+										}}
+									>
+										<img
+											crossorigin="anonymous"
+											src={model?.info?.meta?.profile_image_url ??
+												($i18n.language === 'dg-DG'
+													? `${WEBUI_BASE_URL}/doge.png`
+													: `${WEBUI_BASE_URL}/static/favicon.png`)}
+											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
+											aria-hidden="true"
+											draggable="false"
+										/>
+									</button>
+								</Tooltip>
+							{/each}
+						</div>
+					</div>
+
+					<div
+						class=" text-3xl @sm:text-3xl line-clamp-1 flex items-center"
+						in:fade={{ duration: 100 }}
+					>
+						{#if models[selectedModelIdx]?.name}
+							<Tooltip
+								content={models[selectedModelIdx]?.name}
+								placement="top"
+								className=" flex items-center "
+							>
+								<span class="line-clamp-1">
+									{models[selectedModelIdx]?.name}
+								</span>
+							</Tooltip>
+						{:else}
+							{$i18n.t('Hello, {{name}}', { name: $user?.name })}
+						{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+					</div>
+				</div>
+
+				<div class="flex mt-1 mb-2">
+					<div in:fade={{ duration: 100, delay: 50 }}>
+						{#if models[selectedModelIdx]?.info?.meta?.description ?? null}
+							<Tooltip
+								className=" w-fit"
+								content={marked.parse(
+									sanitizeResponseContent(
+										models[selectedModelIdx]?.info?.meta?.description ?? ''
+									).replaceAll('\n', '<br>')
+								)}
+								placement="top"
+							>
+								<div
+									class="mt-0.5 px-2 text-sm font-normal text-gray-500 dark:text-gray-400 line-clamp-2 max-w-xl markdown"
+								>
+									{@html marked.parse(
+										sanitizeResponseContent(
+											models[selectedModelIdx]?.info?.meta?.description ?? ''
+										).replaceAll('\n', '<br>')
+									)}
+								</div>
+							</Tooltip>
+
+							{#if models[selectedModelIdx]?.info?.meta?.user}
+								<div class="mt-0.5 text-sm font-normal text-gray-400 dark:text-gray-500">
+									By
+									{#if models[selectedModelIdx]?.info?.meta?.user.community}
+										<a
+											href="https://openwebui.com/m/{models[selectedModelIdx]?.info?.meta?.user
+												.username}"
+											>{models[selectedModelIdx]?.info?.meta?.user.name
+												? models[selectedModelIdx]?.info?.meta?.user.name
+												: `@${models[selectedModelIdx]?.info?.meta?.user.username}`}</a
+										>
+									{:else}
+										{models[selectedModelIdx]?.info?.meta?.user.name}
+									{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+								</div>
+							{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+						{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+					</div>
+				</div>
+			{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+
+			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}">
+				<MessageInput
+					bind:this={messageInput}
+					{history}
+					{selectedModels}
+					bind:files
+					bind:prompt
+					bind:autoScroll
+					bind:selectedToolIds
+					bind:selectedFilterIds
+					bind:imageGenerationEnabled
+					bind:codeInterpreterEnabled
+					bind:webSearchEnabled
+					bind:atSelectedModel
+					bind:showCommands
+					{toolServers}
+					{transparentBackground}
+					{stopResponse}
+					{createMessagePair}
+					placeholder={$i18n.t('How can I help you today?')}
+					onChange={(input) => {
+						if (!$temporaryChatEnabled) {
+							if (input.prompt !== null) {
+								sessionStorage.setItem(`chat-input`, JSON.stringify(input));
+							} else {
+								sessionStorage.removeItem(`chat-input`);
+							}
+						}
+					}}
+					on:upload={(e) => {
+						dispatch('upload', e.detail);
+					}}
+					on:submit={(e) => {
+						dispatch('submit', e.detail);
+					}}
+				/>
+			</div>
+		</div>
+	</div>
+
+	{#if $selectedFolder}
+		<div
+			class="mx-auto px-4 md:max-w-3xl md:px-6 font-primary min-h-62"
+			in:fade={{ duration: 200, delay: 200 }}
+		>
+			<FolderPlaceholder folder={$selectedFolder} />
+		</div>
+	{:else}
+		<div class="mx-auto max-w-2xl font-primary mt-2" in:fade={{ duration: 200, delay: 200 }}>
+			<div class="mx-5">
+				<!-- Model Usage Instructions -->
+				{#if (atSelectedModel?.info?.meta?.usage_instructions ?? models[selectedModelIdx]?.info?.meta?.usage_instructions ?? null) !== null}
+					{@const instructions = atSelectedModel?.info?.meta?.usage_instructions ?? models[selectedModelIdx]?.info?.meta?.usage_instructions}
+					<div class="mb-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300">
+						{#if instructions.title}
+							<div class="text-lg font-medium mb-2">{instructions.title}</div>
+						{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+						
+						{#if instructions.content}
+							<div class="text-sm space-y-2 whitespace-pre-line">
+								{instructions.content}
+							</div>
+						{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+						
+						{#if instructions.image_url}
+							<div class="mt-3">
+								<p class="font-medium mb-2 text-center text-sm">{$i18n.t('Usage Demo Image')}</p>
+								<div class="flex justify-center">
+									<button
+										type="button"
+										class="cursor-pointer hover:opacity-90 transition-opacity"
+										on:click={() => {
+											modalImageUrl = instructions.image_url;
+											showImageModal = true;
+										}}
+									>
+										<img 
+											src={instructions.image_url}
+											alt="Model Usage Demo" 
+											class="rounded-lg"
+											style="max-height: 300px; width: auto;"
+										/>
+									</button>
+								</div>
+							</div>
+						{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+						
+						{#if instructions.video_url}
+							<div class="mt-3">
+								<p class="font-medium mb-2 text-center text-sm">{$i18n.t('Usage Demo Video')}</p>
+								<div class="flex justify-center">
+									<button
+										type="button"
+										class="relative group cursor-pointer"
+										on:click={() => {
+											modalVideoUrl = instructions.video_url;
+											showVideoModal = true;
+										}}
+									>
+										<video 
+											controls 
+											class="rounded-lg"
+											style="max-height: 200px; width: auto;"
+										>
+											<source src={instructions.video_url} type="video/mp4">
+											Your browser does not support the video tag.
+										</video>
+										<div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg">
+											<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+												<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+											</svg>
+										</div>
+									</button>
+								</div>
+							</div>
+						{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+					</div>
+				{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+				
+				<Suggestions
+					suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
+						models[selectedModelIdx]?.info?.meta?.suggestion_prompts ??
+						$config?.default_prompt_suggestions ??
+						[]}
+					inputValue={prompt}
+					{onSelect}
+				/>
+			</div>
+		</div>
+	{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}
+</div>
+
+<!-- Image Modal -->
+{#if showImageModal}
+	<button
+		class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+		on:click={() => {
+			showImageModal = false;
+			modalImageUrl = '';
+		}}
+	>
+		<div 
+			class="relative max-w-full max-h-full"
+			in:scale={{ duration: 300, start: 0.8 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<img 
+				src={modalImageUrl}
+				alt="Model Usage Demo - Expanded" 
+				class="rounded-lg max-w-full max-h-[90vh] object-contain shadow-2xl"
+				on:click|stopPropagation
+			/>
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click|stopPropagation={() => {
+					showImageModal = false;
+					modalImageUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</button>
+{/if}
+
+<!-- Video Modal - 半全屏 -->
+{#if showVideoModal}
+	<div
+		class="fixed inset-0 z-[998] flex items-center justify-end pr-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+	>
+		<!-- 半透明背景 -->
+		<button
+			class="absolute inset-0 bg-black/30 backdrop-blur-sm"
+			on:click={() => {
+				showVideoModal = false;
+				modalVideoUrl = '';
+			}}
+		/>
+		
+		<!-- 视频容器 - 占据右侧大部分空间 -->
+		<div 
+			class="relative bg-gray-900 rounded-lg shadow-2xl overflow-hidden"
+			style="width: calc(100vw - 280px); max-width: 1200px; height: 80vh;"
+			in:scale={{ duration: 300, start: 0.9 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<video 
+				controls
+				autoplay
+				class="w-full h-full object-contain"
+				on:click|stopPropagation
+			>
+				<source src={modalVideoUrl} type="video/mp4">
+				Your browser does not support the video tag.
+			</video>
+			
+			<!-- 关闭按钮 -->
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click={() => {
+					showVideoModal = false;
+					modalVideoUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</div>
+{/if}

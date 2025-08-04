@@ -69,6 +69,7 @@
 			profile_image_url: `${WEBUI_BASE_URL}/static/favicon.png`,
 			description: '',
 			suggestion_prompts: null,
+			usage_instructions: null,
 			tags: []
 		},
 		params: {
@@ -268,6 +269,14 @@
 					)
 				)
 			};
+
+			// Ensure usage_instructions is properly initialized
+			if (!info.meta) {
+				info.meta = {};
+			}
+			if (info.meta.usage_instructions === undefined) {
+				info.meta.usage_instructions = null;
+			}
 
 			console.log(model);
 		}
@@ -577,7 +586,7 @@
 								</div>
 							</div>
 
-							{/* Hello Message 功能注释掉
+							<!-- Hello Message 功能注释掉
 							<div class="my-3">
 								<div class=" text-xs font-semibold mb-2">{$i18n.t('Hello Message')}</div>
 								<div>
@@ -592,7 +601,7 @@
 									{$i18n.t('This message will appear as the first assistant message when users start a new chat with this model.')}
 								</div>
 							</div>
-							*/}
+							-->
 
 							<div class="flex w-full justify-between">
 								<div class=" self-center text-xs font-semibold">
@@ -706,6 +715,81 @@
 								{:else}
 									<div class="text-xs text-center">No suggestion prompts</div>
 								{/if}
+							</div>
+						{/if}
+					</div>
+
+					<hr class=" border-gray-100 dark:border-gray-850 my-1.5" />
+
+					<!-- Model Usage Instructions -->
+					<div class="flex flex-col gap-3">
+						<div class="flex justify-between items-center">
+							<div class="flex items-center space-x-2">
+								<div class=" text-xs font-semibold">{$i18n.t('Model Usage Instructions')}</div>
+
+								<button
+									class="p-1 text-xs flex rounded-sm transition"
+									type="button"
+									on:click={() => {
+										if ((info?.meta?.usage_instructions ?? null) === null) {
+											info.meta.usage_instructions = {
+												title: '',
+												content: '',
+												image_url: '',
+												video_url: ''
+											};
+										} else {
+											info.meta.usage_instructions = null;
+										}
+									}}
+								>
+									{#if (info?.meta?.usage_instructions ?? null) === null}
+										<span class="ml-2 self-center">{$i18n.t('None')}</span>
+									{:else}
+										<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
+									{/if}
+								</button>
+							</div>
+						</div>
+
+						{#if info?.meta?.usage_instructions !== null}
+							<div class="flex flex-col space-y-3">
+								<div>
+									<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{$i18n.t('Title')}</div>
+									<input
+										class="text-sm w-full bg-transparent outline-hidden"
+										placeholder={$i18n.t('Model Display Name')}
+										bind:value={info.meta.usage_instructions.title}
+									/>
+								</div>
+
+								<div>
+									<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{$i18n.t('Content')}</div>
+									<Textarea
+										className="text-sm w-full bg-transparent outline-hidden resize-none overflow-y-hidden"
+										placeholder={$i18n.t('Write detailed usage instructions for this model...')}
+										rows={6}
+										bind:value={info.meta.usage_instructions.content}
+									/>
+								</div>
+
+								<div>
+									<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{$i18n.t('Image URL (Optional)')}</div>
+									<input
+										class="text-sm w-full bg-transparent outline-hidden"
+										placeholder="https://example.com/image.jpg"
+										bind:value={info.meta.usage_instructions.image_url}
+									/>
+								</div>
+
+								<div>
+									<div class="text-xs text-gray-500 dark:text-gray-400 mb-1">{$i18n.t('Video URL (Optional)')}</div>
+									<input
+										class="text-sm w-full bg-transparent outline-hidden"
+										placeholder="https://example.com/video.mp4"
+										bind:value={info.meta.usage_instructions.video_url}
+									/>
+								</div>
 							</div>
 						{/if}
 					</div>

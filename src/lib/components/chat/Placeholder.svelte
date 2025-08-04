@@ -26,6 +26,7 @@
 	import FolderPlaceholder from './Placeholder/FolderPlaceholder.svelte';
 	import FolderTitle from './Placeholder/FolderTitle.svelte';
 	import { getChatList } from '$lib/apis/chats';
+	import { scale } from 'svelte/transition';
 
 	const i18n = getContext('i18n');
 
@@ -61,6 +62,8 @@
 	let models = [];
 
 	let selectedModelIdx = 0;
+	let showImageModal = false;
+	let modalImageUrl = '';
 
 	$: if (selectedModels.length > 0) {
 		selectedModelIdx = models.length - 1;
@@ -254,6 +257,61 @@
 	{:else}
 		<div class="mx-auto max-w-2xl font-primary mt-2" in:fade={{ duration: 200, delay: 200 }}>
 			<div class="mx-5">
+				<!-- Model Usage Instructions -->
+				{#if (atSelectedModel?.info?.meta?.usage_instructions ?? models[selectedModelIdx]?.info?.meta?.usage_instructions ?? null) !== null}
+					{@const instructions = atSelectedModel?.info?.meta?.usage_instructions ?? models[selectedModelIdx]?.info?.meta?.usage_instructions}
+					<div class="mb-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300">
+						{#if instructions.title}
+							<div class="text-lg font-medium mb-2">{instructions.title}</div>
+						{/if}
+						
+						{#if instructions.content}
+							<div class="text-sm space-y-2 whitespace-pre-line">
+								{instructions.content}
+							</div>
+						{/if}
+						
+						{#if instructions.image_url}
+							<div class="mt-3">
+								<p class="font-medium mb-2 text-center text-sm">{$i18n.t('Usage Demo Image')}</p>
+								<div class="flex justify-center">
+									<button
+										type="button"
+										class="cursor-pointer hover:opacity-90 transition-opacity"
+										on:click={() => {
+											modalImageUrl = instructions.image_url;
+											showImageModal = true;
+										}}
+									>
+										<img 
+											src={instructions.image_url}
+											alt="Model Usage Demo" 
+											class="rounded-lg"
+											style="max-height: 300px; width: auto;"
+										/>
+									</button>
+								</div>
+							</div>
+						{/if}
+						
+						{#if instructions.video_url}
+							<div class="mt-3">
+								<p class="font-medium mb-2 text-center text-sm">{$i18n.t('Usage Demo Video')}</p>
+								<div class="flex justify-center">
+									<video 
+										controls 
+										class="rounded-lg"
+										style="max-height: 200px; width: auto;"
+									>
+										<source src={instructions.video_url} type="video/mp4">
+										Your browser does not support the video tag.
+									</video>
+								</div>
+							</div>
+						{/if}
+					</div>
+				{/if}
+				
 				<Suggestions
 					suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
 						models[selectedModelIdx]?.info?.meta?.suggestion_prompts ??
@@ -266,3 +324,40 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Image Modal -->
+{#if showImageModal}
+	<button
+		class="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+		in:fade={{ duration: 200 }}
+		out:fade={{ duration: 200 }}
+		on:click={() => {
+			showImageModal = false;
+			modalImageUrl = '';
+		}}
+	>
+		<div 
+			class="relative max-w-full max-h-full"
+			in:scale={{ duration: 300, start: 0.8 }}
+			out:scale={{ duration: 200, start: 0.95 }}
+		>
+			<img 
+				src={modalImageUrl}
+				alt="Model Usage Demo - Expanded" 
+				class="rounded-lg max-w-full max-h-[90vh] object-contain shadow-2xl"
+				on:click|stopPropagation
+			/>
+			<button
+				class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-70 transition"
+				on:click|stopPropagation={() => {
+					showImageModal = false;
+					modalImageUrl = '';
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		</div>
+	</button>
+{/if}
