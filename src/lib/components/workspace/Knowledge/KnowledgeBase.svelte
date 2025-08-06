@@ -36,6 +36,7 @@
 	import { blobToFile } from '$lib/utils';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Files from './KnowledgeBase/Files.svelte';
 	import AddFilesPlaceholder from '$lib/components/AddFilesPlaceholder.svelte';
 
@@ -75,6 +76,7 @@
 	let showSyncConfirmModal = false;
 	let showAccessControlModal = false;
 
+	let advancedPdfEnabled = false;
 	let inputFiles = null;
 
 	let filteredItems = [];
@@ -171,6 +173,14 @@
 			) {
 				metadata = {
 					language: $settings?.audio?.stt?.language
+				};
+			}
+
+			// Add advanced PDF parsing flag if enabled
+			if (advancedPdfEnabled && file.type === 'application/pdf') {
+				metadata = {
+					...metadata,
+					use_advanced_pdf: true
 				};
 			}
 
@@ -873,7 +883,34 @@
 									}}
 								/>
 
-								<div>
+								<div class="flex items-center gap-1">
+									<!-- Advanced PDF Parsing Button -->
+									<Tooltip content={$i18n.t('文件带图带表解析')} placement="bottom">
+										<button
+											on:click|preventDefault={() => (advancedPdfEnabled = !advancedPdfEnabled)}
+											type="button"
+											class="p-1.5 rounded-lg transition-colors {advancedPdfEnabled
+												? 'text-sky-500 dark:text-sky-300 bg-sky-50 dark:bg-sky-200/10'
+												: 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-850'}"
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												viewBox="0 0 20 20"
+												fill="currentColor"
+												class="size-4"
+											>
+												<path
+													d="M3 3.5A1.5 1.5 0 014.5 2h6.879a1.5 1.5 0 011.06.44l4.122 4.12A1.5 1.5 0 0117 7.622V16.5a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 013 16.5v-13z"
+												/>
+												<path
+													d="M5 8h2v2H5V8zm0 3h2v2H5v-2zm3-3h7v2H8V8zm0 3h7v2H8v-2zm0 3h4v2H8v-2z"
+													fill="currentColor"
+													opacity="0.5"
+												/>
+											</svg>
+										</button>
+									</Tooltip>
+									
 									<AddContentMenu
 										on:upload={(e) => {
 											if (e.detail.type === 'directory') {
