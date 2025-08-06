@@ -23,6 +23,7 @@ from langchain_community.document_loaders import (
 from langchain_core.documents import Document
 
 from open_webui.retrieval.loaders.external_document import ExternalDocumentLoader
+from open_webui.retrieval.loaders.mineru import MinerULoader
 
 from open_webui.retrieval.loaders.mistral import MistralLoader
 from open_webui.retrieval.loaders.datalab_marker import DatalabMarkerLoader
@@ -287,16 +288,33 @@ class Loader:
                         docling_params["ocr_lang"] = selected_config.get("DOCLING_OCR_LANG")
                     if docling_params:
                         self.kwargs["DOCLING_PARAMS"] = docling_params
+                
+                # For MinerU, we need the URL and backend from the config
+                if self.engine == "mineru" and selected_config:
+                    if selected_config.get("MINERU_SERVER_URL"):
+                        self.kwargs["MINERU_SERVER_URL"] = selected_config.get("MINERU_SERVER_URL")
+                    if selected_config.get("MINERU_BACKEND"):
+                        self.kwargs["MINERU_BACKEND"] = selected_config.get("MINERU_BACKEND")
+                    if selected_config.get("MINERU_SGLANG_SERVER_URL"):
+                        self.kwargs["MINERU_SGLANG_SERVER_URL"] = selected_config.get("MINERU_SGLANG_SERVER_URL")
 
-        if (
+        if self.engine == "mineru" and self.kwargs.get("MINERU_SERVER_URL"):
+            loader = MinerULoader(
+                file_path=file_path,
+                url=self.kwargs.get("MINERU_SERVER_URL"),
+                backend=self.kwargs.get("MINERU_BACKEND", "pipeline"),
+                sglang_server_url=self.kwargs.get("MINERU_SGLANG_SERVER_URL"),
+            )
+        elif (
             self.engine == "external"
             and self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_URL")
-            and self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_API_KEY")
         ):
+            # API Key is optional
+            api_key = self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_API_KEY", "")
             loader = ExternalDocumentLoader(
                 file_path=file_path,
                 url=self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_URL"),
-                api_key=self.kwargs.get("EXTERNAL_DOCUMENT_LOADER_API_KEY"),
+                api_key=api_key,
                 mime_type=file_content_type,
             )
         elif self.engine == "tika" and self.kwargs.get("TIKA_SERVER_URL"):

@@ -78,7 +78,10 @@
 				DATALAB_MARKER_LANGS: '',
 				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
 				DOCUMENT_INTELLIGENCE_KEY: '',
-				MISTRAL_OCR_API_KEY: ''
+				MISTRAL_OCR_API_KEY: '',
+				MINERU_SERVER_URL: '',
+				MINERU_BACKEND: 'pipeline',
+				MINERU_SGLANG_SERVER_URL: ''
 			} 
 		},
 		advanced_pdf: {
@@ -94,7 +97,10 @@
 				DATALAB_MARKER_LANGS: '',
 				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
 				DOCUMENT_INTELLIGENCE_KEY: '',
-				MISTRAL_OCR_API_KEY: ''
+				MISTRAL_OCR_API_KEY: '',
+				MINERU_SERVER_URL: '',
+				MINERU_BACKEND: 'pipeline',
+				MINERU_SGLANG_SERVER_URL: ''
 			}
 		},
 		docx: { 
@@ -124,7 +130,10 @@
 				DATALAB_MARKER_API_KEY: '',
 				DATALAB_MARKER_LANGS: '',
 				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
-				DOCUMENT_INTELLIGENCE_KEY: ''
+				DOCUMENT_INTELLIGENCE_KEY: '',
+				MINERU_SERVER_URL: '',
+				MINERU_BACKEND: 'pipeline',
+				MINERU_SGLANG_SERVER_URL: ''
 			} 
 		},
 		ppt: { 
@@ -139,7 +148,10 @@
 				DATALAB_MARKER_API_KEY: '',
 				DATALAB_MARKER_LANGS: '',
 				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
-				DOCUMENT_INTELLIGENCE_KEY: ''
+				DOCUMENT_INTELLIGENCE_KEY: '',
+				MINERU_SERVER_URL: '',
+				MINERU_BACKEND: 'pipeline',
+				MINERU_SGLANG_SERVER_URL: ''
 			} 
 		},
 		image: { 
@@ -153,7 +165,10 @@
 				DOCLING_OCR_LANG: '',
 				DATALAB_MARKER_API_KEY: '',
 				DATALAB_MARKER_LANGS: '',
-				MISTRAL_OCR_API_KEY: ''
+				MISTRAL_OCR_API_KEY: '',
+				MINERU_SERVER_URL: '',
+				MINERU_BACKEND: 'pipeline',
+				MINERU_SGLANG_SERVER_URL: ''
 			} 
 		},
 		default: { 
@@ -387,7 +402,10 @@
 						DATALAB_MARKER_LANGS: '',
 						DOCUMENT_INTELLIGENCE_ENDPOINT: '',
 						DOCUMENT_INTELLIGENCE_KEY: '',
-						MISTRAL_OCR_API_KEY: ''
+						MISTRAL_OCR_API_KEY: '',
+				MINERU_SERVER_URL: '',
+				MINERU_BACKEND: 'pipeline',
+				MINERU_SGLANG_SERVER_URL: ''
 					}
 				};
 			}
@@ -492,6 +510,7 @@
 											<option value="external">{$i18n.t('External')}</option>
 											<option value="tika">{$i18n.t('Tika')}</option>
 											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="mineru">{$i18n.t('MinerU')}</option>
 											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
 											<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
 											<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
@@ -567,6 +586,32 @@
 												bind:value={fileTypeEngineMapping.pdf.config.DOCUMENT_INTELLIGENCE_KEY}
 											/>
 										</div>
+									{:else if fileTypeEngineMapping.pdf.engine === 'mineru'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="MinerU Server URL"
+												bind:value={fileTypeEngineMapping.pdf.config.MINERU_SERVER_URL}
+											/>
+											<select
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												bind:value={fileTypeEngineMapping.pdf.config.MINERU_BACKEND}
+											>
+												<option value="pipeline">Pipeline (默认)</option>
+												<option value="vlm-sglang-client">VLM SGLang Client (带图表加速)</option>
+											</select>
+										</div>
+										{#if fileTypeEngineMapping.pdf.config.MINERU_BACKEND === 'vlm-sglang-client'}
+											<div class="ml-32">
+												<input
+													type="text"
+													class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													bind:value={fileTypeEngineMapping.pdf.config.MINERU_SGLANG_SERVER_URL}
+													placeholder="{$i18n.t('SGLang Server URL')}"
+													autocomplete="off"
+												/>
+											</div>
+										{/if}
 									{:else if fileTypeEngineMapping.pdf.engine === 'mistral_ocr'}
 										<div class="ml-32">
 											<input
@@ -592,6 +637,7 @@
 											<option value="external">{$i18n.t('External')}</option>
 											<option value="tika">{$i18n.t('Tika')}</option>
 											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="mineru">{$i18n.t('MinerU')}</option>
 											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
 											<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
 											<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
@@ -667,6 +713,32 @@
 												bind:value={fileTypeEngineMapping.advanced_pdf.config.DOCUMENT_INTELLIGENCE_KEY}
 											/>
 										</div>
+									{:else if fileTypeEngineMapping.advanced_pdf.engine === 'mineru'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="MinerU Server URL"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.MINERU_SERVER_URL}
+											/>
+											<select
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.MINERU_BACKEND}
+											>
+												<option value="pipeline">Pipeline (默认)</option>
+												<option value="vlm-sglang-client">VLM SGLang Client (带图表加速)</option>
+											</select>
+										</div>
+										{#if fileTypeEngineMapping.advanced_pdf.config.MINERU_BACKEND === 'vlm-sglang-client'}
+											<div class="ml-32">
+												<input
+													type="text"
+													class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													bind:value={fileTypeEngineMapping.advanced_pdf.config.MINERU_SGLANG_SERVER_URL}
+													placeholder="{$i18n.t('SGLang Server URL')}"
+													autocomplete="off"
+												/>
+											</div>
+										{/if}
 									{:else if fileTypeEngineMapping.advanced_pdf.engine === 'mistral_ocr'}
 										<div class="ml-32">
 											<input
@@ -692,6 +764,7 @@
 											<option value="external">{$i18n.t('External')}</option>
 											<option value="tika">{$i18n.t('Tika')}</option>
 											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="mineru">{$i18n.t('MinerU')}</option>
 											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
 											<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
 										</select>
@@ -766,6 +839,32 @@
 												bind:value={fileTypeEngineMapping.docx.config.DOCUMENT_INTELLIGENCE_KEY}
 											/>
 										</div>
+									{:else if fileTypeEngineMapping.docx.engine === 'mineru'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="MinerU Server URL"
+												bind:value={fileTypeEngineMapping.docx.config.MINERU_SERVER_URL}
+											/>
+											<select
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												bind:value={fileTypeEngineMapping.docx.config.MINERU_BACKEND}
+											>
+												<option value="pipeline">Pipeline (默认)</option>
+												<option value="vlm-sglang-client">VLM SGLang Client (带图表加速)</option>
+											</select>
+										</div>
+										{#if fileTypeEngineMapping.docx.config.MINERU_BACKEND === 'vlm-sglang-client'}
+											<div class="ml-32">
+												<input
+													type="text"
+													class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													bind:value={fileTypeEngineMapping.docx.config.MINERU_SGLANG_SERVER_URL}
+													placeholder="{$i18n.t('SGLang Server URL')}"
+													autocomplete="off"
+												/>
+											</div>
+										{/if}
 									{/if}
 								</div>
 								
@@ -781,6 +880,7 @@
 											<option value="external">{$i18n.t('External')}</option>
 											<option value="tika">{$i18n.t('Tika')}</option>
 											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="mineru">{$i18n.t('MinerU')}</option>
 											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
 											<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
 										</select>
@@ -855,6 +955,32 @@
 												bind:value={fileTypeEngineMapping.excel.config.DOCUMENT_INTELLIGENCE_KEY}
 											/>
 										</div>
+									{:else if fileTypeEngineMapping.excel.engine === 'mineru'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="MinerU Server URL"
+												bind:value={fileTypeEngineMapping.excel.config.MINERU_SERVER_URL}
+											/>
+											<select
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												bind:value={fileTypeEngineMapping.excel.config.MINERU_BACKEND}
+											>
+												<option value="pipeline">Pipeline (默认)</option>
+												<option value="vlm-sglang-client">VLM SGLang Client (带图表加速)</option>
+											</select>
+										</div>
+										{#if fileTypeEngineMapping.excel.config.MINERU_BACKEND === 'vlm-sglang-client'}
+											<div class="ml-32">
+												<input
+													type="text"
+													class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													bind:value={fileTypeEngineMapping.excel.config.MINERU_SGLANG_SERVER_URL}
+													placeholder="{$i18n.t('SGLang Server URL')}"
+													autocomplete="off"
+												/>
+											</div>
+										{/if}
 									{/if}
 								</div>
 								
@@ -870,6 +996,7 @@
 											<option value="external">{$i18n.t('External')}</option>
 											<option value="tika">{$i18n.t('Tika')}</option>
 											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="mineru">{$i18n.t('MinerU')}</option>
 											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
 											<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
 										</select>
@@ -944,6 +1071,32 @@
 												bind:value={fileTypeEngineMapping.ppt.config.DOCUMENT_INTELLIGENCE_KEY}
 											/>
 										</div>
+									{:else if fileTypeEngineMapping.ppt.engine === 'mineru'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="MinerU Server URL"
+												bind:value={fileTypeEngineMapping.ppt.config.MINERU_SERVER_URL}
+											/>
+											<select
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												bind:value={fileTypeEngineMapping.ppt.config.MINERU_BACKEND}
+											>
+												<option value="pipeline">Pipeline (默认)</option>
+												<option value="vlm-sglang-client">VLM SGLang Client (带图表加速)</option>
+											</select>
+										</div>
+										{#if fileTypeEngineMapping.ppt.config.MINERU_BACKEND === 'vlm-sglang-client'}
+											<div class="ml-32">
+												<input
+													type="text"
+													class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													bind:value={fileTypeEngineMapping.ppt.config.MINERU_SGLANG_SERVER_URL}
+													placeholder="{$i18n.t('SGLang Server URL')}"
+													autocomplete="off"
+												/>
+											</div>
+										{/if}
 									{/if}
 								</div>
 								
@@ -959,6 +1112,7 @@
 											<option value="external">{$i18n.t('External')}</option>
 											<option value="tika">{$i18n.t('Tika')}</option>
 											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="mineru">{$i18n.t('MinerU')}</option>
 											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
 											<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
 										</select>
@@ -1019,6 +1173,32 @@
 												bind:value={fileTypeEngineMapping.image.config.DATALAB_MARKER_LANGS}
 											/>
 										</div>
+									{:else if fileTypeEngineMapping.image.engine === 'mineru'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="MinerU Server URL"
+												bind:value={fileTypeEngineMapping.image.config.MINERU_SERVER_URL}
+											/>
+											<select
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												bind:value={fileTypeEngineMapping.image.config.MINERU_BACKEND}
+											>
+												<option value="pipeline">Pipeline (默认)</option>
+												<option value="vlm-sglang-client">VLM SGLang Client (带图表加速)</option>
+											</select>
+										</div>
+										{#if fileTypeEngineMapping.image.config.MINERU_BACKEND === 'vlm-sglang-client'}
+											<div class="ml-32">
+												<input
+													type="text"
+													class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													bind:value={fileTypeEngineMapping.image.config.MINERU_SGLANG_SERVER_URL}
+													placeholder="{$i18n.t('SGLang Server URL')}"
+													autocomplete="off"
+												/>
+											</div>
+										{/if}
 									{:else if fileTypeEngineMapping.image.engine === 'mistral_ocr'}
 										<div class="ml-32">
 											<input
@@ -1043,6 +1223,7 @@
 											<option value="external">{$i18n.t('External')}</option>
 											<option value="tika">{$i18n.t('Tika')}</option>
 											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="mineru">{$i18n.t('MinerU')}</option>
 											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
 										</select>
 									</div>
@@ -1102,6 +1283,32 @@
 												bind:value={fileTypeEngineMapping.default.config.DATALAB_MARKER_LANGS}
 											/>
 										</div>
+									{:else if fileTypeEngineMapping.default.engine === 'mineru'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="MinerU Server URL"
+												bind:value={fileTypeEngineMapping.default.config.MINERU_SERVER_URL}
+											/>
+											<select
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												bind:value={fileTypeEngineMapping.default.config.MINERU_BACKEND}
+											>
+												<option value="pipeline">Pipeline (默认)</option>
+												<option value="vlm-sglang-client">VLM SGLang Client (带图表加速)</option>
+											</select>
+										</div>
+										{#if fileTypeEngineMapping.default.config.MINERU_BACKEND === 'vlm-sglang-client'}
+											<div class="ml-32">
+												<input
+													type="text"
+													class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													bind:value={fileTypeEngineMapping.default.config.MINERU_SGLANG_SERVER_URL}
+													placeholder="{$i18n.t('SGLang Server URL')}"
+													autocomplete="off"
+												/>
+											</div>
+										{/if}
 									{/if}
 								</div>
 							</div>
