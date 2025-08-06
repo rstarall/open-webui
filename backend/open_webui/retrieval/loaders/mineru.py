@@ -69,31 +69,64 @@ class MinerULoader(BaseLoader):
                 if isinstance(response_data, dict):
                     content = None
                     
-                    # Try to get markdown content from response
-                    if "markdown" in response_data:
-                        content = response_data["markdown"]
-                    elif "content" in response_data:
-                        content = response_data["content"]
-                    elif "text" in response_data:
-                        content = response_data["text"]
-                    elif "result" in response_data:
-                        if isinstance(response_data["result"], str):
-                            content = response_data["result"]
-                        elif isinstance(response_data["result"], dict) and "markdown" in response_data["result"]:
-                            content = response_data["result"]["markdown"]
-                    else:
-                        content = str(response_data)
+                    # Check if response has 'results' key with file ID nested structure
+                    if "results" in response_data:
+                        results = response_data["results"]
+                        if isinstance(results, dict):
+                            # Get the first result (usually keyed by file ID)
+                            for file_id, file_data in results.items():
+                                if isinstance(file_data, dict):
+                                    # Try to get markdown content from the file data
+                                    if "md_content" in file_data:
+                                        content = file_data["md_content"]
+                                        break
+                                    elif "content" in file_data:
+                                        content = file_data["content"]
+                                        break
+                                    elif "text" in file_data:
+                                        content = file_data["text"]
+                                        break
+                    
+                    # If not found in results, try other common fields
+                    if not content:
+                        if "markdown" in response_data:
+                            content = response_data["markdown"]
+                        elif "md_content" in response_data:
+                            content = response_data["md_content"]
+                        elif "content" in response_data:
+                            content = response_data["content"]
+                        elif "text" in response_data:
+                            content = response_data["text"]
+                        elif "result" in response_data:
+                            if isinstance(response_data["result"], str):
+                                content = response_data["result"]
+                            elif isinstance(response_data["result"], dict) and "markdown" in response_data["result"]:
+                                content = response_data["result"]["markdown"]
+                    
+                    # Extract metadata if available
+                    metadata = {
+                        "source": filename,
+                        "parser": "MinerU"
+                    }
+                    
+                    # Add backend and version info if available
+                    if "backend" in response_data:
+                        metadata["backend"] = response_data["backend"]
+                    if "version" in response_data:
+                        metadata["version"] = response_data["version"]
                     
                     if content:
                         return [
                             Document(
                                 page_content=content,
-                                metadata={
-                                    "source": filename,
-                                    "parser": "MinerU"
-                                }
+                                metadata=metadata
                             )
                         ]
+                    else:
+                        # If no content found, log the structure for debugging
+                        log.warning(f"MinerU response structure: {list(response_data.keys())}")
+                        raise Exception(f"Could not extract content from MinerU response")
+                        
                 elif isinstance(response_data, str):
                     # Direct string response
                     return [
