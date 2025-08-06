@@ -399,6 +399,7 @@ async def get_rag_config(request: Request, user=Depends(get_admin_user)):
         "HYBRID_BM25_WEIGHT": request.app.state.config.HYBRID_BM25_WEIGHT,
         # Content extraction settings
         "CONTENT_EXTRACTION_ENGINE": request.app.state.config.CONTENT_EXTRACTION_ENGINE,
+        "FILE_TYPE_ENGINE_MAPPING": getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
         "PDF_EXTRACT_IMAGES": request.app.state.config.PDF_EXTRACT_IMAGES,
         "DATALAB_MARKER_API_KEY": request.app.state.config.DATALAB_MARKER_API_KEY,
         "DATALAB_MARKER_LANGS": request.app.state.config.DATALAB_MARKER_LANGS,
@@ -564,6 +565,7 @@ class ConfigForm(BaseModel):
 
     # Content extraction settings
     CONTENT_EXTRACTION_ENGINE: Optional[str] = None
+    FILE_TYPE_ENGINE_MAPPING: Optional[dict] = None  # New field for file type routing
     PDF_EXTRACT_IMAGES: Optional[bool] = None
     DATALAB_MARKER_API_KEY: Optional[str] = None
     DATALAB_MARKER_LANGS: Optional[str] = None
@@ -672,6 +674,11 @@ async def update_rag_config(
         form_data.CONTENT_EXTRACTION_ENGINE
         if form_data.CONTENT_EXTRACTION_ENGINE is not None
         else request.app.state.config.CONTENT_EXTRACTION_ENGINE
+    )
+    request.app.state.config.FILE_TYPE_ENGINE_MAPPING = (
+        form_data.FILE_TYPE_ENGINE_MAPPING
+        if form_data.FILE_TYPE_ENGINE_MAPPING is not None
+        else getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {})
     )
     request.app.state.config.PDF_EXTRACT_IMAGES = (
         form_data.PDF_EXTRACT_IMAGES
@@ -1004,6 +1011,7 @@ async def update_rag_config(
         "HYBRID_BM25_WEIGHT": request.app.state.config.HYBRID_BM25_WEIGHT,
         # Content extraction settings
         "CONTENT_EXTRACTION_ENGINE": request.app.state.config.CONTENT_EXTRACTION_ENGINE,
+        "FILE_TYPE_ENGINE_MAPPING": getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
         "PDF_EXTRACT_IMAGES": request.app.state.config.PDF_EXTRACT_IMAGES,
         "DATALAB_MARKER_API_KEY": request.app.state.config.DATALAB_MARKER_API_KEY,
         "DATALAB_MARKER_LANGS": request.app.state.config.DATALAB_MARKER_LANGS,
@@ -1405,6 +1413,7 @@ def process_file(
                 file_path = Storage.get_file(file_path)
                 loader = Loader(
                     engine=request.app.state.config.CONTENT_EXTRACTION_ENGINE,
+                    FILE_TYPE_ENGINE_MAPPING=getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
                     DATALAB_MARKER_API_KEY=request.app.state.config.DATALAB_MARKER_API_KEY,
                     DATALAB_MARKER_LANGS=request.app.state.config.DATALAB_MARKER_LANGS,
                     DATALAB_MARKER_SKIP_CACHE=request.app.state.config.DATALAB_MARKER_SKIP_CACHE,

@@ -2012,6 +2012,12 @@ CONTENT_EXTRACTION_ENGINE = PersistentConfig(
     os.environ.get("CONTENT_EXTRACTION_ENGINE", "").lower(),
 )
 
+FILE_TYPE_ENGINE_MAPPING = PersistentConfig(
+    "FILE_TYPE_ENGINE_MAPPING",
+    "rag.FILE_TYPE_ENGINE_MAPPING",
+    {},
+)
+
 DATALAB_MARKER_API_KEY = PersistentConfig(
     "DATALAB_MARKER_API_KEY",
     "rag.datalab_marker_api_key",

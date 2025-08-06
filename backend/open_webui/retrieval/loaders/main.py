@@ -234,6 +234,45 @@ class Loader:
 
     def _get_loader(self, filename: str, file_content_type: str, file_path: str):
         file_ext = filename.split(".")[-1].lower()
+        
+        # Handle file type routing
+        if self.engine == "file_type_routing" and self.kwargs.get("FILE_TYPE_ENGINE_MAPPING"):
+            mapping = self.kwargs.get("FILE_TYPE_ENGINE_MAPPING", {})
+            
+            # Determine which engine to use based on file type
+            selected_engine = None
+            selected_config = {}
+            
+            # Check PDF files
+            if file_ext == "pdf" and mapping.get("pdf"):
+                selected_engine = mapping["pdf"].get("engine", "")
+                selected_config = mapping["pdf"].get("config", {})
+            # Check Word documents
+            elif file_ext in ["doc", "docx"] and mapping.get("docx"):
+                selected_engine = mapping["docx"].get("engine", "")
+                selected_config = mapping["docx"].get("config", {})
+            # Check Excel files
+            elif file_ext in ["xls", "xlsx"] and mapping.get("excel"):
+                selected_engine = mapping["excel"].get("engine", "")
+                selected_config = mapping["excel"].get("config", {})
+            # Check PowerPoint files
+            elif file_ext in ["ppt", "pptx"] and mapping.get("ppt"):
+                selected_engine = mapping["ppt"].get("engine", "")
+                selected_config = mapping["ppt"].get("config", {})
+            # Check image files
+            elif file_ext in ["jpg", "jpeg", "png", "webp"] and mapping.get("image"):
+                selected_engine = mapping["image"].get("engine", "")
+                selected_config = mapping["image"].get("config", {})
+            # Use default for all other files
+            elif mapping.get("default"):
+                selected_engine = mapping["default"].get("engine", "")
+                selected_config = mapping["default"].get("config", {})
+            
+            # Override engine if a specific one was selected
+            if selected_engine:
+                self.engine = selected_engine
+                # Merge the specific config with existing kwargs
+                self.kwargs.update(selected_config)
 
         if (
             self.engine == "external"

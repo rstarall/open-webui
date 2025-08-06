@@ -62,6 +62,16 @@
 	};
 
 	let RAGConfig = null;
+	
+	// File type engine mapping configuration
+	let fileTypeEngineMapping = {
+		pdf: { engine: '', config: {} },
+		docx: { engine: '', config: {} },
+		excel: { engine: '', config: {} },
+		ppt: { engine: '', config: {} },
+		image: { engine: '', config: {} },
+		default: { engine: '', config: {} }
+	};
 
 	const embeddingModelUpdateHandler = async () => {
 		if (embeddingEngine === '' && embeddingModel.split('/').length - 1 > 1) {
@@ -192,6 +202,9 @@
 
 		const res = await updateRAGConfig(localStorage.token, {
 			...RAGConfig,
+			FILE_TYPE_ENGINE_MAPPING: RAGConfig.CONTENT_EXTRACTION_ENGINE === 'file_type_routing' 
+				? fileTypeEngineMapping 
+				: {},
 			ALLOWED_FILE_EXTENSIONS: RAGConfig.ALLOWED_FILE_EXTENSIONS.split(',')
 				.map((ext) => ext.trim())
 				.filter((ext) => ext !== ''),
@@ -242,6 +255,11 @@
 			null,
 			2
 		);
+		
+		// Initialize file type engine mapping
+		if (config.FILE_TYPE_ENGINE_MAPPING && Object.keys(config.FILE_TYPE_ENGINE_MAPPING).length > 0) {
+			fileTypeEngineMapping = config.FILE_TYPE_ENGINE_MAPPING;
+		}
 
 		RAGConfig = config;
 	});
@@ -314,6 +332,7 @@
 									bind:value={RAGConfig.CONTENT_EXTRACTION_ENGINE}
 								>
 									<option value="">{$i18n.t('Default')}</option>
+									<option value="file_type_routing">{$i18n.t('File Type Routing')}</option>
 									<option value="external">{$i18n.t('External')}</option>
 									<option value="tika">{$i18n.t('Tika')}</option>
 									<option value="docling">{$i18n.t('Docling')}</option>
@@ -323,6 +342,108 @@
 								</select>
 							</div>
 						</div>
+
+						{#if RAGConfig.CONTENT_EXTRACTION_ENGINE === 'file_type_routing'}
+							<div class="mt-4 space-y-3 border rounded-lg p-4 dark:border-gray-700">
+								<div class="text-xs font-semibold mb-3">{$i18n.t('Configure engines for different file types')}</div>
+								
+								<!-- PDF Configuration -->
+								<div class="flex items-center justify-between">
+									<span class="text-xs w-32">{$i18n.t('PDF Files')}:</span>
+									<select 
+										class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+										bind:value={fileTypeEngineMapping.pdf.engine}
+									>
+										<option value="">{$i18n.t('Default')}</option>
+										<option value="external">{$i18n.t('External')}</option>
+										<option value="tika">{$i18n.t('Tika')}</option>
+										<option value="docling">{$i18n.t('Docling')}</option>
+										<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+										<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
+										<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
+									</select>
+								</div>
+								
+								<!-- Word Documents Configuration -->
+								<div class="flex items-center justify-between">
+									<span class="text-xs w-32">{$i18n.t('Word (doc/docx)')}:</span>
+									<select 
+										class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+										bind:value={fileTypeEngineMapping.docx.engine}
+									>
+										<option value="">{$i18n.t('Default')}</option>
+										<option value="external">{$i18n.t('External')}</option>
+										<option value="tika">{$i18n.t('Tika')}</option>
+										<option value="docling">{$i18n.t('Docling')}</option>
+										<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+										<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
+									</select>
+								</div>
+								
+								<!-- Excel Configuration -->
+								<div class="flex items-center justify-between">
+									<span class="text-xs w-32">{$i18n.t('Excel (xls/xlsx)')}:</span>
+									<select 
+										class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+										bind:value={fileTypeEngineMapping.excel.engine}
+									>
+										<option value="">{$i18n.t('Default')}</option>
+										<option value="external">{$i18n.t('External')}</option>
+										<option value="tika">{$i18n.t('Tika')}</option>
+										<option value="docling">{$i18n.t('Docling')}</option>
+										<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+										<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
+									</select>
+								</div>
+								
+								<!-- PowerPoint Configuration -->
+								<div class="flex items-center justify-between">
+									<span class="text-xs w-32">{$i18n.t('PPT (ppt/pptx)')}:</span>
+									<select 
+										class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+										bind:value={fileTypeEngineMapping.ppt.engine}
+									>
+										<option value="">{$i18n.t('Default')}</option>
+										<option value="external">{$i18n.t('External')}</option>
+										<option value="tika">{$i18n.t('Tika')}</option>
+										<option value="docling">{$i18n.t('Docling')}</option>
+										<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+										<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
+									</select>
+								</div>
+								
+								<!-- Image Configuration -->
+								<div class="flex items-center justify-between">
+									<span class="text-xs w-32">{$i18n.t('Images (jpg/png/webp)')}:</span>
+									<select 
+										class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+										bind:value={fileTypeEngineMapping.image.engine}
+									>
+										<option value="">{$i18n.t('Default')}</option>
+										<option value="external">{$i18n.t('External')}</option>
+										<option value="tika">{$i18n.t('Tika')}</option>
+										<option value="docling">{$i18n.t('Docling')}</option>
+										<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+										<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
+									</select>
+								</div>
+								
+								<!-- Default/Other Files Configuration -->
+								<div class="flex items-center justify-between">
+									<span class="text-xs w-32">{$i18n.t('Other Files')}:</span>
+									<select 
+										class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+										bind:value={fileTypeEngineMapping.default.engine}
+									>
+										<option value="">{$i18n.t('Default')}</option>
+										<option value="external">{$i18n.t('External')}</option>
+										<option value="tika">{$i18n.t('Tika')}</option>
+										<option value="docling">{$i18n.t('Docling')}</option>
+										<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+									</select>
+								</div>
+							</div>
+						{/if}
 
 						{#if RAGConfig.CONTENT_EXTRACTION_ENGINE === ''}
 							<div class="flex w-full mt-1">
