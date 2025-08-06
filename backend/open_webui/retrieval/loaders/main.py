@@ -273,6 +273,16 @@ class Loader:
                 self.engine = selected_engine
                 # Merge the specific config with existing kwargs
                 self.kwargs.update(selected_config)
+                
+                # For Docling, we need to build DOCLING_PARAMS from the config
+                if self.engine == "docling" and selected_config:
+                    docling_params = {}
+                    if selected_config.get("DOCLING_OCR_ENGINE"):
+                        docling_params["ocr_engine"] = selected_config.get("DOCLING_OCR_ENGINE")
+                    if selected_config.get("DOCLING_OCR_LANG"):
+                        docling_params["ocr_lang"] = selected_config.get("DOCLING_OCR_LANG")
+                    if docling_params:
+                        self.kwargs["DOCLING_PARAMS"] = docling_params
 
         if (
             self.engine == "external"

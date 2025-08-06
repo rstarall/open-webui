@@ -72,7 +72,10 @@
 				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
 				TIKA_SERVER_URL: '',
 				DOCLING_SERVER_URL: '',
+				DOCLING_OCR_ENGINE: '',
+				DOCLING_OCR_LANG: '',
 				DATALAB_MARKER_API_KEY: '',
+				DATALAB_MARKER_LANGS: '',
 				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
 				DOCUMENT_INTELLIGENCE_KEY: '',
 				MISTRAL_OCR_API_KEY: ''
@@ -85,7 +88,10 @@
 				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
 				TIKA_SERVER_URL: '',
 				DOCLING_SERVER_URL: '',
+				DOCLING_OCR_ENGINE: '',
+				DOCLING_OCR_LANG: '',
 				DATALAB_MARKER_API_KEY: '',
+				DATALAB_MARKER_LANGS: '',
 				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
 				DOCUMENT_INTELLIGENCE_KEY: ''
 			} 
@@ -97,7 +103,10 @@
 				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
 				TIKA_SERVER_URL: '',
 				DOCLING_SERVER_URL: '',
+				DOCLING_OCR_ENGINE: '',
+				DOCLING_OCR_LANG: '',
 				DATALAB_MARKER_API_KEY: '',
+				DATALAB_MARKER_LANGS: '',
 				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
 				DOCUMENT_INTELLIGENCE_KEY: ''
 			} 
@@ -109,7 +118,10 @@
 				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
 				TIKA_SERVER_URL: '',
 				DOCLING_SERVER_URL: '',
+				DOCLING_OCR_ENGINE: '',
+				DOCLING_OCR_LANG: '',
 				DATALAB_MARKER_API_KEY: '',
+				DATALAB_MARKER_LANGS: '',
 				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
 				DOCUMENT_INTELLIGENCE_KEY: ''
 			} 
@@ -121,7 +133,10 @@
 				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
 				TIKA_SERVER_URL: '',
 				DOCLING_SERVER_URL: '',
+				DOCLING_OCR_ENGINE: '',
+				DOCLING_OCR_LANG: '',
 				DATALAB_MARKER_API_KEY: '',
+				DATALAB_MARKER_LANGS: '',
 				MISTRAL_OCR_API_KEY: ''
 			} 
 		},
@@ -132,7 +147,10 @@
 				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
 				TIKA_SERVER_URL: '',
 				DOCLING_SERVER_URL: '',
-				DATALAB_MARKER_API_KEY: ''
+				DOCLING_OCR_ENGINE: '',
+				DOCLING_OCR_LANG: '',
+				DATALAB_MARKER_API_KEY: '',
+				DATALAB_MARKER_LANGS: ''
 			} 
 		}
 	};
@@ -451,20 +469,37 @@
 											/>
 										</div>
 									{:else if fileTypeEngineMapping.pdf.engine === 'docling'}
-										<div class="ml-32">
+										<div class="ml-32 space-y-1">
 											<input
 												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
 												placeholder="Docling Server URL"
 												bind:value={fileTypeEngineMapping.pdf.config.DOCLING_SERVER_URL}
 											/>
+											<div class="flex gap-2">
+												<input
+													class="flex-1 text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													placeholder="OCR Engine (e.g., tesseract)"
+													bind:value={fileTypeEngineMapping.pdf.config.DOCLING_OCR_ENGINE}
+												/>
+												<input
+													class="flex-1 text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													placeholder="OCR Language(s) (e.g., eng,fra,deu)"
+													bind:value={fileTypeEngineMapping.pdf.config.DOCLING_OCR_LANG}
+												/>
+											</div>
 										</div>
 									{:else if fileTypeEngineMapping.pdf.engine === 'datalab_marker'}
-										<div class="ml-32">
+										<div class="ml-32 space-y-1">
 											<input
 												type="password"
 												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
 												placeholder="Datalab Marker API Key"
 												bind:value={fileTypeEngineMapping.pdf.config.DATALAB_MARKER_API_KEY}
+											/>
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Languages (e.g., en,fr,de)"
+												bind:value={fileTypeEngineMapping.pdf.config.DATALAB_MARKER_LANGS}
 											/>
 										</div>
 									{:else if fileTypeEngineMapping.pdf.engine === 'document_intelligence'}
@@ -532,20 +567,37 @@
 											/>
 										</div>
 									{:else if fileTypeEngineMapping.docx.engine === 'docling'}
-										<div class="ml-32">
+										<div class="ml-32 space-y-1">
 											<input
 												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
 												placeholder="Docling Server URL"
 												bind:value={fileTypeEngineMapping.docx.config.DOCLING_SERVER_URL}
 											/>
+											<div class="flex gap-2">
+												<input
+													class="flex-1 text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													placeholder="OCR Engine (e.g., tesseract)"
+													bind:value={fileTypeEngineMapping.docx.config.DOCLING_OCR_ENGINE}
+												/>
+												<input
+													class="flex-1 text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													placeholder="OCR Language(s) (e.g., eng,fra,deu)"
+													bind:value={fileTypeEngineMapping.docx.config.DOCLING_OCR_LANG}
+												/>
+											</div>
 										</div>
 									{:else if fileTypeEngineMapping.docx.engine === 'datalab_marker'}
-										<div class="ml-32">
+										<div class="ml-32 space-y-1">
 											<input
 												type="password"
 												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
 												placeholder="Datalab Marker API Key"
 												bind:value={fileTypeEngineMapping.docx.config.DATALAB_MARKER_API_KEY}
+											/>
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Languages (e.g., en,fr,de)"
+												bind:value={fileTypeEngineMapping.docx.config.DATALAB_MARKER_LANGS}
 											/>
 										</div>
 									{:else if fileTypeEngineMapping.docx.engine === 'document_intelligence'}
