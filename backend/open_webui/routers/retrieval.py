@@ -399,7 +399,7 @@ async def get_rag_config(request: Request, user=Depends(get_admin_user)):
         "HYBRID_BM25_WEIGHT": request.app.state.config.HYBRID_BM25_WEIGHT,
         # Content extraction settings
         "CONTENT_EXTRACTION_ENGINE": request.app.state.config.CONTENT_EXTRACTION_ENGINE,
-        "FILE_TYPE_ENGINE_MAPPING": getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
+        "FILE_TYPE_ENGINE_MAPPING": request.app.state.config.FILE_TYPE_ENGINE_MAPPING.value if hasattr(request.app.state.config.FILE_TYPE_ENGINE_MAPPING, 'value') else getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
         "PDF_EXTRACT_IMAGES": request.app.state.config.PDF_EXTRACT_IMAGES,
         "DATALAB_MARKER_API_KEY": request.app.state.config.DATALAB_MARKER_API_KEY,
         "DATALAB_MARKER_LANGS": request.app.state.config.DATALAB_MARKER_LANGS,
@@ -675,11 +675,19 @@ async def update_rag_config(
         if form_data.CONTENT_EXTRACTION_ENGINE is not None
         else request.app.state.config.CONTENT_EXTRACTION_ENGINE
     )
-    request.app.state.config.FILE_TYPE_ENGINE_MAPPING = (
-        form_data.FILE_TYPE_ENGINE_MAPPING
-        if form_data.FILE_TYPE_ENGINE_MAPPING is not None
-        else getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {})
-    )
+    if hasattr(request.app.state.config.FILE_TYPE_ENGINE_MAPPING, 'value'):
+        request.app.state.config.FILE_TYPE_ENGINE_MAPPING.value = (
+            form_data.FILE_TYPE_ENGINE_MAPPING
+            if form_data.FILE_TYPE_ENGINE_MAPPING is not None
+            else request.app.state.config.FILE_TYPE_ENGINE_MAPPING.value
+        )
+        request.app.state.config.FILE_TYPE_ENGINE_MAPPING.save()
+    else:
+        request.app.state.config.FILE_TYPE_ENGINE_MAPPING = (
+            form_data.FILE_TYPE_ENGINE_MAPPING
+            if form_data.FILE_TYPE_ENGINE_MAPPING is not None
+            else {}
+        )
     request.app.state.config.PDF_EXTRACT_IMAGES = (
         form_data.PDF_EXTRACT_IMAGES
         if form_data.PDF_EXTRACT_IMAGES is not None
@@ -1011,7 +1019,7 @@ async def update_rag_config(
         "HYBRID_BM25_WEIGHT": request.app.state.config.HYBRID_BM25_WEIGHT,
         # Content extraction settings
         "CONTENT_EXTRACTION_ENGINE": request.app.state.config.CONTENT_EXTRACTION_ENGINE,
-        "FILE_TYPE_ENGINE_MAPPING": getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
+        "FILE_TYPE_ENGINE_MAPPING": request.app.state.config.FILE_TYPE_ENGINE_MAPPING.value if hasattr(request.app.state.config.FILE_TYPE_ENGINE_MAPPING, 'value') else getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
         "PDF_EXTRACT_IMAGES": request.app.state.config.PDF_EXTRACT_IMAGES,
         "DATALAB_MARKER_API_KEY": request.app.state.config.DATALAB_MARKER_API_KEY,
         "DATALAB_MARKER_LANGS": request.app.state.config.DATALAB_MARKER_LANGS,
@@ -1413,7 +1421,7 @@ def process_file(
                 file_path = Storage.get_file(file_path)
                 loader = Loader(
                     engine=request.app.state.config.CONTENT_EXTRACTION_ENGINE,
-                    FILE_TYPE_ENGINE_MAPPING=getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
+                    FILE_TYPE_ENGINE_MAPPING=request.app.state.config.FILE_TYPE_ENGINE_MAPPING.value if hasattr(request.app.state.config.FILE_TYPE_ENGINE_MAPPING, 'value') else getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
                     DATALAB_MARKER_API_KEY=request.app.state.config.DATALAB_MARKER_API_KEY,
                     DATALAB_MARKER_LANGS=request.app.state.config.DATALAB_MARKER_LANGS,
                     DATALAB_MARKER_SKIP_CACHE=request.app.state.config.DATALAB_MARKER_SKIP_CACHE,

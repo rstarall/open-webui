@@ -342,15 +342,17 @@
 			2
 		);
 		
-		// Initialize file type engine mapping
+		// Store config in RAGConfig
+		RAGConfig = config;
+		
+		// Initialize file type engine mapping from config
 		if (config.FILE_TYPE_ENGINE_MAPPING && Object.keys(config.FILE_TYPE_ENGINE_MAPPING).length > 0) {
 			// Deep clone the mapping to avoid reference issues
 			fileTypeEngineMapping = JSON.parse(JSON.stringify(config.FILE_TYPE_ENGINE_MAPPING));
+		} else {
+			// Only assign default mapping if config doesn't have it
+			RAGConfig.FILE_TYPE_ENGINE_MAPPING = fileTypeEngineMapping;
 		}
-		
-		// Store FILE_TYPE_ENGINE_MAPPING in RAGConfig as well
-		RAGConfig = config;
-		RAGConfig.FILE_TYPE_ENGINE_MAPPING = fileTypeEngineMapping;
 	});
 </script>
 
