@@ -102,8 +102,7 @@
 	export let imageGenerationEnabled = false;
 	export let webSearchEnabled = false;
 	export let codeInterpreterEnabled = false;
-
-	let advancedPdfEnabled = false;
+	export let advancedPdfEnabled = false;
 	let showInputVariablesModal = false;
 	let inputVariables = {};
 	let inputVariableValues = {};
@@ -123,7 +122,8 @@
 		selectedFilterIds,
 		imageGenerationEnabled,
 		webSearchEnabled,
-		codeInterpreterEnabled
+		codeInterpreterEnabled,
+		advancedPdfEnabled
 	});
 
 	const inputVariableHandler = async (text: string) => {
@@ -1268,6 +1268,7 @@
 														webSearchEnabled = false;
 														imageGenerationEnabled = false;
 														codeInterpreterEnabled = false;
+														advancedPdfEnabled = false;
 													}
 												}}
 												on:paste={async (e) => {
