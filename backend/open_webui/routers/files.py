@@ -103,6 +103,8 @@ def upload_file(
                 detail=ERROR_MESSAGES.DEFAULT("Invalid metadata format"),
             )
     file_metadata = metadata if metadata else {}
+    print(f"[DEBUG FILES] File metadata: {file_metadata}")
+    print(f"[DEBUG FILES] use_advanced_pdf in metadata: {file_metadata.get('use_advanced_pdf')}")
 
     try:
         unsanitized_filename = file.filename

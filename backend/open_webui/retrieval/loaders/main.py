@@ -235,9 +235,15 @@ class Loader:
     def _get_loader(self, filename: str, file_content_type: str, file_path: str):
         file_ext = filename.split(".")[-1].lower()
         
+        # Debug logging
+        print(f"[DEBUG] Loader engine: {self.engine}")
+        print(f"[DEBUG] File extension: {file_ext}")
+        print(f"[DEBUG] use_advanced_pdf: {self.kwargs.get('use_advanced_pdf')}")
+        
         # Handle file type routing
         if self.engine == "file_type_routing" and self.kwargs.get("FILE_TYPE_ENGINE_MAPPING"):
             mapping = self.kwargs.get("FILE_TYPE_ENGINE_MAPPING", {})
+            print(f"[DEBUG] FILE_TYPE_ENGINE_MAPPING: {mapping}")
             
             # Determine which engine to use based on file type
             selected_engine = None
@@ -245,8 +251,11 @@ class Loader:
             
             # Check for advanced PDF processing first
             if file_ext == "pdf" and mapping.get("advanced_pdf") and self.kwargs.get("use_advanced_pdf"):
+                print(f"[DEBUG] Using advanced PDF engine")
                 selected_engine = mapping["advanced_pdf"].get("engine", "")
                 selected_config = mapping["advanced_pdf"].get("config", {})
+                print(f"[DEBUG] Advanced PDF engine: {selected_engine}")
+                print(f"[DEBUG] Advanced PDF config: {selected_config}")
             # Check regular PDF files
             elif file_ext == "pdf" and mapping.get("pdf"):
                 selected_engine = mapping["pdf"].get("engine", "")
