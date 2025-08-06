@@ -281,12 +281,16 @@
 		if (!RAGConfig.BYPASS_EMBEDDING_AND_RETRIEVAL) {
 			await embeddingModelUpdateHandler();
 		}
+		
+		// Update RAGConfig with the current fileTypeEngineMapping before saving
+		if (RAGConfig.CONTENT_EXTRACTION_ENGINE === 'file_type_routing') {
+			RAGConfig.FILE_TYPE_ENGINE_MAPPING = fileTypeEngineMapping;
+		} else {
+			RAGConfig.FILE_TYPE_ENGINE_MAPPING = {};
+		}
 
 		const res = await updateRAGConfig(localStorage.token, {
 			...RAGConfig,
-			FILE_TYPE_ENGINE_MAPPING: RAGConfig.CONTENT_EXTRACTION_ENGINE === 'file_type_routing' 
-				? fileTypeEngineMapping 
-				: {},
 			ALLOWED_FILE_EXTENSIONS: RAGConfig.ALLOWED_FILE_EXTENSIONS.split(',')
 				.map((ext) => ext.trim())
 				.filter((ext) => ext !== ''),
@@ -340,10 +344,13 @@
 		
 		// Initialize file type engine mapping
 		if (config.FILE_TYPE_ENGINE_MAPPING && Object.keys(config.FILE_TYPE_ENGINE_MAPPING).length > 0) {
-			fileTypeEngineMapping = config.FILE_TYPE_ENGINE_MAPPING;
+			// Deep clone the mapping to avoid reference issues
+			fileTypeEngineMapping = JSON.parse(JSON.stringify(config.FILE_TYPE_ENGINE_MAPPING));
 		}
-
+		
+		// Store FILE_TYPE_ENGINE_MAPPING in RAGConfig as well
 		RAGConfig = config;
+		RAGConfig.FILE_TYPE_ENGINE_MAPPING = fileTypeEngineMapping;
 	});
 </script>
 

@@ -2014,7 +2014,7 @@ CONTENT_EXTRACTION_ENGINE = PersistentConfig(
 
 FILE_TYPE_ENGINE_MAPPING = PersistentConfig(
     "FILE_TYPE_ENGINE_MAPPING",
-    "rag.FILE_TYPE_ENGINE_MAPPING",
+    "rag.file_type_engine_mapping",
     {},
 )
 
