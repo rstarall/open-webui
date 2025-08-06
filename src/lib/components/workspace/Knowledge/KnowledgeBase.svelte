@@ -889,7 +889,7 @@
 										<button
 											on:click|preventDefault={() => (advancedPdfEnabled = !advancedPdfEnabled)}
 											type="button"
-											class="p-1.5 rounded-lg transition-colors {advancedPdfEnabled
+											class="px-2 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 text-xs {advancedPdfEnabled
 												? 'text-sky-500 dark:text-sky-300 bg-sky-50 dark:bg-sky-200/10'
 												: 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-850'}"
 										>
@@ -897,7 +897,7 @@
 												xmlns="http://www.w3.org/2000/svg"
 												viewBox="0 0 20 20"
 												fill="currentColor"
-												class="size-4"
+												class="size-5"
 											>
 												<path
 													d="M3 3.5A1.5 1.5 0 014.5 2h6.879a1.5 1.5 0 011.06.44l4.122 4.12A1.5 1.5 0 0117 7.622V16.5a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 013 16.5v-13z"
@@ -908,6 +908,7 @@
 													opacity="0.5"
 												/>
 											</svg>
+											<span class="whitespace-nowrap font-medium">{$i18n.t('文件带图带表')}</span>
 										</button>
 									</Tooltip>
 									
