@@ -1419,9 +1419,13 @@ def process_file(
             file_path = file.path
             if file_path:
                 file_path = Storage.get_file(file_path)
+                # Check if advanced PDF parsing is requested
+                use_advanced_pdf = file.meta.get("use_advanced_pdf", False) if file.meta else False
+                
                 loader = Loader(
                     engine=request.app.state.config.CONTENT_EXTRACTION_ENGINE,
                     FILE_TYPE_ENGINE_MAPPING=request.app.state.config.FILE_TYPE_ENGINE_MAPPING.value if hasattr(request.app.state.config.FILE_TYPE_ENGINE_MAPPING, 'value') else getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {}),
+                    use_advanced_pdf=use_advanced_pdf,
                     DATALAB_MARKER_API_KEY=request.app.state.config.DATALAB_MARKER_API_KEY,
                     DATALAB_MARKER_LANGS=request.app.state.config.DATALAB_MARKER_LANGS,
                     DATALAB_MARKER_SKIP_CACHE=request.app.state.config.DATALAB_MARKER_SKIP_CACHE,

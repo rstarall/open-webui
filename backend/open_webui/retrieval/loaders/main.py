@@ -243,8 +243,12 @@ class Loader:
             selected_engine = None
             selected_config = {}
             
-            # Check PDF files
-            if file_ext == "pdf" and mapping.get("pdf"):
+            # Check for advanced PDF processing first
+            if file_ext == "pdf" and mapping.get("advanced_pdf") and self.kwargs.get("use_advanced_pdf"):
+                selected_engine = mapping["advanced_pdf"].get("engine", "")
+                selected_config = mapping["advanced_pdf"].get("config", {})
+            # Check regular PDF files
+            elif file_ext == "pdf" and mapping.get("pdf"):
                 selected_engine = mapping["pdf"].get("engine", "")
                 selected_config = mapping["pdf"].get("config", {})
             # Check Word documents

@@ -81,6 +81,22 @@
 				MISTRAL_OCR_API_KEY: ''
 			} 
 		},
+		advanced_pdf: {
+			engine: '',
+			config: {
+				EXTERNAL_DOCUMENT_LOADER_URL: '',
+				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
+				TIKA_SERVER_URL: '',
+				DOCLING_SERVER_URL: '',
+				DOCLING_OCR_ENGINE: '',
+				DOCLING_OCR_LANG: '',
+				DATALAB_MARKER_API_KEY: '',
+				DATALAB_MARKER_LANGS: '',
+				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
+				DOCUMENT_INTELLIGENCE_KEY: '',
+				MISTRAL_OCR_API_KEY: ''
+			}
+		},
 		docx: { 
 			engine: '', 
 			config: {
@@ -348,7 +364,33 @@
 		// Initialize file type engine mapping from config
 		if (config.FILE_TYPE_ENGINE_MAPPING && Object.keys(config.FILE_TYPE_ENGINE_MAPPING).length > 0) {
 			// Deep clone the mapping to avoid reference issues
-			fileTypeEngineMapping = JSON.parse(JSON.stringify(config.FILE_TYPE_ENGINE_MAPPING));
+			const mappingFromConfig = JSON.parse(JSON.stringify(config.FILE_TYPE_ENGINE_MAPPING));
+			
+			// Merge with default structure to ensure all properties exist
+			fileTypeEngineMapping = {
+				...fileTypeEngineMapping,
+				...mappingFromConfig
+			};
+			
+			// Ensure advanced_pdf exists with proper structure
+			if (!fileTypeEngineMapping.advanced_pdf) {
+				fileTypeEngineMapping.advanced_pdf = {
+					engine: '',
+					config: {
+						EXTERNAL_DOCUMENT_LOADER_URL: '',
+						EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
+						TIKA_SERVER_URL: '',
+						DOCLING_SERVER_URL: '',
+						DOCLING_OCR_ENGINE: '',
+						DOCLING_OCR_LANG: '',
+						DATALAB_MARKER_API_KEY: '',
+						DATALAB_MARKER_LANGS: '',
+						DOCUMENT_INTELLIGENCE_ENDPOINT: '',
+						DOCUMENT_INTELLIGENCE_KEY: '',
+						MISTRAL_OCR_API_KEY: ''
+					}
+				};
+			}
 		} else {
 			// Only assign default mapping if config doesn't have it
 			RAGConfig.FILE_TYPE_ENGINE_MAPPING = fileTypeEngineMapping;
@@ -536,6 +578,107 @@
 										</div>
 									{/if}
 								</div>
+
+								<!-- Advanced PDF Configuration -->
+								{#if fileTypeEngineMapping.advanced_pdf}
+								<div class="space-y-2 pb-3 border-b dark:border-gray-600">
+									<div class="flex items-center justify-between">
+										<span class="text-xs w-32 font-medium">{$i18n.t('文件带图带表解析')}:</span>
+										<select 
+											class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+											bind:value={fileTypeEngineMapping.advanced_pdf.engine}
+										>
+											<option value="">{$i18n.t('Default')}</option>
+											<option value="external">{$i18n.t('External')}</option>
+											<option value="tika">{$i18n.t('Tika')}</option>
+											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+											<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
+											<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
+										</select>
+									</div>
+									{#if fileTypeEngineMapping.advanced_pdf.engine === 'external'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="External Document Loader URL"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.EXTERNAL_DOCUMENT_LOADER_URL}
+											/>
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="API Key (optional)"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.EXTERNAL_DOCUMENT_LOADER_API_KEY}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.advanced_pdf.engine === 'tika'}
+										<div class="ml-32">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Tika Server URL"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.TIKA_SERVER_URL}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.advanced_pdf.engine === 'docling'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Docling Server URL"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.DOCLING_SERVER_URL}
+											/>
+											<div class="flex gap-2">
+												<input
+													class="flex-1 text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													placeholder="OCR Engine (e.g., tesseract)"
+													bind:value={fileTypeEngineMapping.advanced_pdf.config.DOCLING_OCR_ENGINE}
+												/>
+												<input
+													class="flex-1 text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+													placeholder="OCR Language(s) (e.g., eng,fra,deu)"
+													bind:value={fileTypeEngineMapping.advanced_pdf.config.DOCLING_OCR_LANG}
+												/>
+											</div>
+										</div>
+									{:else if fileTypeEngineMapping.advanced_pdf.engine === 'datalab_marker'}
+										<div class="ml-32 space-y-1">
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Datalab Marker API Key"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.DATALAB_MARKER_API_KEY}
+											/>
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Languages (e.g., en,fr,de)"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.DATALAB_MARKER_LANGS}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.advanced_pdf.engine === 'document_intelligence'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Document Intelligence Endpoint"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.DOCUMENT_INTELLIGENCE_ENDPOINT}
+											/>
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Document Intelligence Key"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.DOCUMENT_INTELLIGENCE_KEY}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.advanced_pdf.engine === 'mistral_ocr'}
+										<div class="ml-32">
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Mistral OCR API Key"
+												bind:value={fileTypeEngineMapping.advanced_pdf.config.MISTRAL_OCR_API_KEY}
+											/>
+										</div>
+									{/if}
+								</div>
+								{/if}
 								
 								<!-- Word Documents Configuration -->
 								<div class="space-y-2 pb-3 border-b dark:border-gray-600">

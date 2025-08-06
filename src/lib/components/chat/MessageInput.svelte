@@ -103,6 +103,7 @@
 	export let webSearchEnabled = false;
 	export let codeInterpreterEnabled = false;
 
+	let advancedPdfEnabled = false;
 	let showInputVariablesModal = false;
 	let inputVariables = {};
 	let inputVariableValues = {};
@@ -542,6 +543,14 @@
 				) {
 					metadata = {
 						language: $settings?.audio?.stt?.language
+					};
+				}
+
+				// Add advanced PDF parsing flag if enabled
+				if (advancedPdfEnabled && file.type === 'application/pdf') {
+					metadata = {
+						...metadata,
+						use_advanced_pdf: true
 					};
 				}
 
@@ -1738,6 +1747,37 @@
 														</button>
 													</Tooltip>
 												{/if}
+
+												<!-- Advanced PDF Parsing Button -->
+												<Tooltip content={$i18n.t('文件带图带表解析')} placement="top">
+													<button
+														on:click|preventDefault={() => (advancedPdfEnabled = !advancedPdfEnabled)}
+														type="button"
+														class="px-2 @xl:px-2.5 py-2 flex gap-1.5 items-center text-sm rounded-full transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden hover:bg-gray-50 dark:hover:bg-gray-800 {advancedPdfEnabled
+															? ' text-sky-500 dark:text-sky-300 bg-sky-50 dark:bg-sky-200/5'
+															: 'bg-transparent text-gray-600 dark:text-gray-300 '}"
+													>
+														<svg
+															xmlns="http://www.w3.org/2000/svg"
+															viewBox="0 0 20 20"
+															fill="currentColor"
+															class="size-4"
+														>
+															<path
+																d="M3 3.5A1.5 1.5 0 014.5 2h6.879a1.5 1.5 0 011.06.44l4.122 4.12A1.5 1.5 0 0117 7.622V16.5a1.5 1.5 0 01-1.5 1.5h-11A1.5 1.5 0 013 16.5v-13z"
+															/>
+															<path
+																d="M5 8h2v2H5V8zm0 3h2v2H5v-2zm3-3h7v2H8V8zm0 3h7v2H8v-2zm0 3h4v2H8v-2z"
+																fill="currentColor"
+																opacity="0.5"
+															/>
+														</svg>
+														<span
+															class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis leading-none pr-0.5"
+															>{$i18n.t('文件加载带图带表')}</span
+														>
+													</button>
+												</Tooltip>
 
 												{#if showCodeInterpreterButton}
 													<Tooltip content={$i18n.t('Execute code for analysis')} placement="top">
