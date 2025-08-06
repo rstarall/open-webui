@@ -1428,13 +1428,7 @@ def process_file(
                     else:
                         use_advanced_pdf = file.meta.get("use_advanced_pdf", False)
                 
-                print(f"[DEBUG RETRIEVAL] File: {file.filename}")
-                print(f"[DEBUG RETRIEVAL] File meta: {file.meta}")
-                print(f"[DEBUG RETRIEVAL] use_advanced_pdf: {use_advanced_pdf}")
-                print(f"[DEBUG RETRIEVAL] CONTENT_EXTRACTION_ENGINE: {request.app.state.config.CONTENT_EXTRACTION_ENGINE}")
-                
                 file_type_mapping = request.app.state.config.FILE_TYPE_ENGINE_MAPPING.value if hasattr(request.app.state.config.FILE_TYPE_ENGINE_MAPPING, 'value') else getattr(request.app.state.config, 'FILE_TYPE_ENGINE_MAPPING', {})
-                print(f"[DEBUG RETRIEVAL] FILE_TYPE_ENGINE_MAPPING: {file_type_mapping}")
                 
                 loader = Loader(
                     engine=request.app.state.config.CONTENT_EXTRACTION_ENGINE,
