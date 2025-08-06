@@ -65,12 +65,76 @@
 	
 	// File type engine mapping configuration
 	let fileTypeEngineMapping = {
-		pdf: { engine: '', config: {} },
-		docx: { engine: '', config: {} },
-		excel: { engine: '', config: {} },
-		ppt: { engine: '', config: {} },
-		image: { engine: '', config: {} },
-		default: { engine: '', config: {} }
+		pdf: { 
+			engine: '', 
+			config: {
+				EXTERNAL_DOCUMENT_LOADER_URL: '',
+				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
+				TIKA_SERVER_URL: '',
+				DOCLING_SERVER_URL: '',
+				DATALAB_MARKER_API_KEY: '',
+				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
+				DOCUMENT_INTELLIGENCE_KEY: '',
+				MISTRAL_OCR_API_KEY: ''
+			} 
+		},
+		docx: { 
+			engine: '', 
+			config: {
+				EXTERNAL_DOCUMENT_LOADER_URL: '',
+				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
+				TIKA_SERVER_URL: '',
+				DOCLING_SERVER_URL: '',
+				DATALAB_MARKER_API_KEY: '',
+				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
+				DOCUMENT_INTELLIGENCE_KEY: ''
+			} 
+		},
+		excel: { 
+			engine: '', 
+			config: {
+				EXTERNAL_DOCUMENT_LOADER_URL: '',
+				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
+				TIKA_SERVER_URL: '',
+				DOCLING_SERVER_URL: '',
+				DATALAB_MARKER_API_KEY: '',
+				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
+				DOCUMENT_INTELLIGENCE_KEY: ''
+			} 
+		},
+		ppt: { 
+			engine: '', 
+			config: {
+				EXTERNAL_DOCUMENT_LOADER_URL: '',
+				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
+				TIKA_SERVER_URL: '',
+				DOCLING_SERVER_URL: '',
+				DATALAB_MARKER_API_KEY: '',
+				DOCUMENT_INTELLIGENCE_ENDPOINT: '',
+				DOCUMENT_INTELLIGENCE_KEY: ''
+			} 
+		},
+		image: { 
+			engine: '', 
+			config: {
+				EXTERNAL_DOCUMENT_LOADER_URL: '',
+				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
+				TIKA_SERVER_URL: '',
+				DOCLING_SERVER_URL: '',
+				DATALAB_MARKER_API_KEY: '',
+				MISTRAL_OCR_API_KEY: ''
+			} 
+		},
+		default: { 
+			engine: '', 
+			config: {
+				EXTERNAL_DOCUMENT_LOADER_URL: '',
+				EXTERNAL_DOCUMENT_LOADER_API_KEY: '',
+				TIKA_SERVER_URL: '',
+				DOCLING_SERVER_URL: '',
+				DATALAB_MARKER_API_KEY: ''
+			} 
+		}
 	};
 
 	const embeddingModelUpdateHandler = async () => {
@@ -344,40 +408,161 @@
 						</div>
 
 						{#if RAGConfig.CONTENT_EXTRACTION_ENGINE === 'file_type_routing'}
-							<div class="mt-4 space-y-3 border rounded-lg p-4 dark:border-gray-700">
+							<div class="mt-4 space-y-4 border rounded-lg p-4 dark:border-gray-700">
 								<div class="text-xs font-semibold mb-3">{$i18n.t('Configure engines for different file types')}</div>
 								
 								<!-- PDF Configuration -->
-								<div class="flex items-center justify-between">
-									<span class="text-xs w-32">{$i18n.t('PDF Files')}:</span>
-									<select 
-										class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
-										bind:value={fileTypeEngineMapping.pdf.engine}
-									>
-										<option value="">{$i18n.t('Default')}</option>
-										<option value="external">{$i18n.t('External')}</option>
-										<option value="tika">{$i18n.t('Tika')}</option>
-										<option value="docling">{$i18n.t('Docling')}</option>
-										<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
-										<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
-										<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
-									</select>
+								<div class="space-y-2 pb-3 border-b dark:border-gray-600">
+									<div class="flex items-center justify-between">
+										<span class="text-xs w-32 font-medium">{$i18n.t('PDF Files')}:</span>
+										<select 
+											class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+											bind:value={fileTypeEngineMapping.pdf.engine}
+										>
+											<option value="">{$i18n.t('Default')}</option>
+											<option value="external">{$i18n.t('External')}</option>
+											<option value="tika">{$i18n.t('Tika')}</option>
+											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+											<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
+											<option value="mistral_ocr">{$i18n.t('Mistral OCR')}</option>
+										</select>
+									</div>
+									{#if fileTypeEngineMapping.pdf.engine === 'external'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="External Document Loader URL"
+												bind:value={fileTypeEngineMapping.pdf.config.EXTERNAL_DOCUMENT_LOADER_URL}
+											/>
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="API Key (optional)"
+												bind:value={fileTypeEngineMapping.pdf.config.EXTERNAL_DOCUMENT_LOADER_API_KEY}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.pdf.engine === 'tika'}
+										<div class="ml-32">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Tika Server URL"
+												bind:value={fileTypeEngineMapping.pdf.config.TIKA_SERVER_URL}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.pdf.engine === 'docling'}
+										<div class="ml-32">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Docling Server URL"
+												bind:value={fileTypeEngineMapping.pdf.config.DOCLING_SERVER_URL}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.pdf.engine === 'datalab_marker'}
+										<div class="ml-32">
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Datalab Marker API Key"
+												bind:value={fileTypeEngineMapping.pdf.config.DATALAB_MARKER_API_KEY}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.pdf.engine === 'document_intelligence'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Document Intelligence Endpoint"
+												bind:value={fileTypeEngineMapping.pdf.config.DOCUMENT_INTELLIGENCE_ENDPOINT}
+											/>
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Document Intelligence Key"
+												bind:value={fileTypeEngineMapping.pdf.config.DOCUMENT_INTELLIGENCE_KEY}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.pdf.engine === 'mistral_ocr'}
+										<div class="ml-32">
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Mistral OCR API Key"
+												bind:value={fileTypeEngineMapping.pdf.config.MISTRAL_OCR_API_KEY}
+											/>
+										</div>
+									{/if}
 								</div>
 								
 								<!-- Word Documents Configuration -->
-								<div class="flex items-center justify-between">
-									<span class="text-xs w-32">{$i18n.t('Word (doc/docx)')}:</span>
-									<select 
-										class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
-										bind:value={fileTypeEngineMapping.docx.engine}
-									>
-										<option value="">{$i18n.t('Default')}</option>
-										<option value="external">{$i18n.t('External')}</option>
-										<option value="tika">{$i18n.t('Tika')}</option>
-										<option value="docling">{$i18n.t('Docling')}</option>
-										<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
-										<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
-									</select>
+								<div class="space-y-2 pb-3 border-b dark:border-gray-600">
+									<div class="flex items-center justify-between">
+										<span class="text-xs w-32 font-medium">{$i18n.t('Word (doc/docx)')}:</span>
+										<select 
+											class="dark:bg-gray-900 w-48 rounded px-2 py-1 text-xs bg-transparent outline-hidden"
+											bind:value={fileTypeEngineMapping.docx.engine}
+										>
+											<option value="">{$i18n.t('Default')}</option>
+											<option value="external">{$i18n.t('External')}</option>
+											<option value="tika">{$i18n.t('Tika')}</option>
+											<option value="docling">{$i18n.t('Docling')}</option>
+											<option value="datalab_marker">{$i18n.t('Datalab Marker API')}</option>
+											<option value="document_intelligence">{$i18n.t('Document Intelligence')}</option>
+										</select>
+									</div>
+									{#if fileTypeEngineMapping.docx.engine === 'external'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="External Document Loader URL"
+												bind:value={fileTypeEngineMapping.docx.config.EXTERNAL_DOCUMENT_LOADER_URL}
+											/>
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="API Key (optional)"
+												bind:value={fileTypeEngineMapping.docx.config.EXTERNAL_DOCUMENT_LOADER_API_KEY}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.docx.engine === 'tika'}
+										<div class="ml-32">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Tika Server URL"
+												bind:value={fileTypeEngineMapping.docx.config.TIKA_SERVER_URL}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.docx.engine === 'docling'}
+										<div class="ml-32">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Docling Server URL"
+												bind:value={fileTypeEngineMapping.docx.config.DOCLING_SERVER_URL}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.docx.engine === 'datalab_marker'}
+										<div class="ml-32">
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Datalab Marker API Key"
+												bind:value={fileTypeEngineMapping.docx.config.DATALAB_MARKER_API_KEY}
+											/>
+										</div>
+									{:else if fileTypeEngineMapping.docx.engine === 'document_intelligence'}
+										<div class="ml-32 space-y-1">
+											<input
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Document Intelligence Endpoint"
+												bind:value={fileTypeEngineMapping.docx.config.DOCUMENT_INTELLIGENCE_ENDPOINT}
+											/>
+											<input
+												type="password"
+												class="w-full text-xs bg-transparent outline-hidden border-b dark:border-gray-600"
+												placeholder="Document Intelligence Key"
+												bind:value={fileTypeEngineMapping.docx.config.DOCUMENT_INTELLIGENCE_KEY}
+											/>
+										</div>
+									{/if}
 								</div>
 								
 								<!-- Excel Configuration -->
