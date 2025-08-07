@@ -45,7 +45,7 @@ COPY package.json package-lock.json ./
 # 跳过可能需要访问 GitHub 的包的安装脚本
 ENV ONNXRUNTIME_SKIP_DOWNLOAD=1
 
-RUN npm install --force --ignore-scripts || true && \
+RUN npm ci --force --ignore-scripts || true && \
     npm rebuild --force || true
 
 COPY . .
