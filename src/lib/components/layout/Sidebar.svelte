@@ -374,6 +374,22 @@
 			initFolders();
 		});
 		
+		// 先加载全局固定的模型，避免竞态条件
+		try {
+			globalPinnedModels = await getGlobalPinnedModels(localStorage.token);
+			// 更新 config store 以确保数据同步
+			config.update((c) => ({
+				...c,
+				ui: {
+					...c?.ui,
+					globalPinnedModels: globalPinnedModels
+				}
+			}));
+		} catch (error) {
+			console.error('Failed to load global pinned models:', error);
+			globalPinnedModels = [];
+		}
+		
 		// 监听 config 变化以更新全局固定模型
 		config.subscribe((value) => {
 			if (value?.ui?.globalPinnedModels) {
@@ -383,14 +399,6 @@
 
 		await initChannels();
 		await initChatList();
-		
-		// 加载全局固定的模型
-		try {
-			globalPinnedModels = await getGlobalPinnedModels(localStorage.token);
-		} catch (error) {
-			console.error('Failed to load global pinned models:', error);
-			globalPinnedModels = [];
-		}
 
 		window.addEventListener('keydown', onKeyDown);
 		window.addEventListener('keyup', onKeyUp);
