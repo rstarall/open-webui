@@ -88,7 +88,8 @@
 		image_generation: true,
 		code_interpreter: true,
 		citations: true,
-		usage: undefined
+		usage: undefined,
+		force_advanced_pdf: false
 	};
 
 	let knowledge = [];

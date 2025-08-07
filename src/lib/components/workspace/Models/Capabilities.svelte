@@ -36,6 +36,10 @@
 		citations: {
 			label: $i18n.t('Citations'),
 			description: $i18n.t('Displays citations in the response')
+		},
+		force_advanced_pdf: {
+			label: $i18n.t('Force Advanced PDF'),
+			description: $i18n.t('Automatically use advanced parsing for all PDF uploads with this model')
 		}
 	};
 
@@ -47,6 +51,7 @@
 		code_interpreter?: boolean;
 		usage?: boolean;
 		citations?: boolean;
+		force_advanced_pdf?: boolean;
 	} = {};
 </script>
 
