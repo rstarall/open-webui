@@ -3,7 +3,6 @@ services:
     volumes:
       - ollama:/root/.ollama
     container_name: ollama
-    pull_policy: always
     tty: true
     restart: unless-stopped
     image: ollama/ollama:${OLLAMA_DOCKER_TAG-latest}
@@ -44,8 +43,6 @@ volumes:
   ollama: {}
   open-webui: {}
 
-# 开发环境构建和启动
-# docker-compose -f docker-compose.dev.yaml up -d --build
 
 
 
