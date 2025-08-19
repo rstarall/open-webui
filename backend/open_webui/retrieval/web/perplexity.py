@@ -58,10 +58,19 @@ def search_perplexity(
             ],
             "temperature": 0.2,  # Lower temperature for more factual responses
             "stream": False,
+            "return_citations": True,  # Ensure citations are returned
             "web_search_options": {
                 "search_context_usage": search_context_usage,
             },
         }
+        
+        # Add domain filter at TOP LEVEL (not in web_search_options)
+        # This is the correct way according to Perplexity API documentation
+        if filter_list and len(filter_list) > 0:
+            # Limit to 10 domains due to API limitation
+            limited_filter_list = filter_list[:10]
+            payload["search_domain_filter"] = limited_filter_list  # TOP LEVEL parameter
+            log.info(f"Using Perplexity domain filter with domains: {limited_filter_list}")
 
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -89,9 +98,8 @@ def search_perplexity(
             result = {"link": citation, "title": f"Source {i+1}", "snippet": content}
             results.append(result)
 
-        if filter_list:
-
-            results = get_filtered_results(results, filter_list)
+        # No need for post-processing filter when using Perplexity's search_domain_filter
+        # The API should handle the filtering at search time
 
         return [
             SearchResult(

@@ -619,6 +619,11 @@
 						<div class="mb-2.5 flex w-full flex-col">
 							<div class="  text-xs font-medium mb-1">
 								{$i18n.t('Domain Filter List')}
+								{#if webConfig.WEB_SEARCH_ENGINE === 'perplexity'}
+									<span class="text-xs text-gray-500 font-normal ml-1">
+										({$i18n.t('Max 10 domains for Perplexity')})
+									</span>
+								{/if}
 							</div>
 
 							<input
@@ -628,6 +633,11 @@
 								)}
 								bind:value={webConfig.WEB_SEARCH_DOMAIN_FILTER_LIST}
 							/>
+							{#if webConfig.WEB_SEARCH_ENGINE === 'perplexity'}
+								<div class="text-xs text-gray-500 mt-1">
+									{$i18n.t('Perplexity will only search within these domains. Leave empty to search all websites.')}
+								</div>
+							{/if}
 						</div>
 					{/if}
 

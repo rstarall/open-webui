@@ -15,7 +15,8 @@ def get_filtered_results(results, filter_list):
         if not validators.url(url):
             continue
         domain = urlparse(url).netloc
-        if any(domain.endswith(filtered_domain) for filtered_domain in filter_list):
+        # Only exact domain match, no subdomain matching
+        if domain in filter_list:
             filtered_results.append(result)
     return filtered_results
 
